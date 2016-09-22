@@ -15,6 +15,7 @@
 
 static GLuint simpleProgram;
 
+
 static void checkGlError(const char* op) {
 	GLint error;
 	for (error = glGetError(); error; error = glGetError()) {

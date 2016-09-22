@@ -3,8 +3,8 @@ package com.fenghun.openglesdroid.jni.view;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.MyOpenglES;
+import com.fenghun.openglesdroid.jni.bean.Square;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
@@ -27,6 +27,9 @@ import android.util.Log;
  * 当需要重绘时，调用GLSurfaceView.requestRender()
  * 一般情况下使用脏模式，这样可以有效降低cpu负载。测试结果表明，OpenGL真正绘图时一般会占到30%以上的cp
  * 
+ * 
+ * 
+ * 
  * @author fenghun
  * @date 2015-10-20
  */
@@ -35,7 +38,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private static String TAG = "VideoGLES20SurfaceView";
 
 	static Handler handler;
-
+	
 	public GLES20SurfaceView(Context context) {
 		super(context);
 		// TODO Auto-generated constructor stub
@@ -53,7 +56,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private void init() {
 		// TODO Auto-generated method stub
 		Log.d(TAG, "------------ init() is called!");
-		setEGLContextClientVersion(2);
+		setEGLContextClientVersion(2);		// 学习 按教程的opengl 1.0 操作。
 		setRenderer(this);
 		// setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY); // 设置为脏模式
 		handler = new Handler() {
@@ -76,27 +79,25 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// TODO Auto-generated method stub
 //		Log.d(TAG,
 //				"------- onSurfaceCreated(GL10 gl, EGLConfig config) is called!");
-		MyOpenglES.onSurfaceCreated(640, 480);
+//		MyOpenglES.onSurfaceCreated(640, 480);
 //		// Set the background color to black ( rgba ).
-//		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // OpenGL docs.
-//
-//		// Enable Smooth Shading, default not really needed.
-//		gl.glShadeModel(GL10.GL_SMOOTH);// OpenGL docs.
+		gl.glClearColor(0.5f, 0.0f, 0.0f, 0.5f); // OpenGL docs.
 
-		
-		
+		// Enable Smooth Shading, default not really needed.
+		gl.glShadeModel(GL10.GL_SMOOTH);// OpenGL docs.
+
 //		// Depth buffer setup.
-//		gl.glClearDepthf(1.0f);// OpenGL docs.
-//
-//		// Enables depth testing.
-//		gl.glEnable(GL10.GL_DEPTH_TEST);// OpenGL docs.
-//
-//		// The type of depth testing to do.
-//		gl.glDepthFunc(GL10.GL_LEQUAL);// OpenGL docs.
-//
-//		// Really nice perspective calculations.
-//		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, // OpenGL docs.
-//				GL10.GL_NICEST);
+		gl.glClearDepthf(1.0f);// OpenGL docs.
+
+		// Enables depth testing.
+		gl.glEnable(GL10.GL_DEPTH_TEST);// OpenGL docs.
+
+		// The type of depth testing to do.
+		gl.glDepthFunc(GL10.GL_LEQUAL);// OpenGL docs.
+
+		// Really nice perspective calculations.
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, // OpenGL docs.
+				GL10.GL_NICEST);
 
 	}
 
@@ -106,42 +107,35 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		Log.d(TAG,
 				"----- onSurfaceChanged(GL10 gl, int width, int height) is called!");
 		MyOpenglES.onSurfaceChanged(width, height);
-//		// Sets the current view port to the new size.
-//		gl.glViewport(0, 0, width, height);// OpenGL docs.
-//
-//		// Select the projection matrix
-//		gl.glMatrixMode(GL10.GL_PROJECTION);// OpenGL docs.
-//
-//		// Reset the projection matrix
-//		gl.glLoadIdentity();// OpenGL docs.
-//
-//		// Calculate the aspect ratio of the window
-//		GLU.gluPerspective(gl, 45.0f,
-//		(float) width / (float) height,
-//		0.1f, 100.0f);
-//
-//		// Select the modelview matrix
-//		gl.glMatrixMode(GL10.GL_MODELVIEW);// OpenGL docs.
-//
-//		// Reset the modelview matrix
-//		gl.glLoadIdentity();// OpenGL docs.
+		// Sets the current view port to the new size.
+		gl.glViewport(0, 0, width, height);// OpenGL docs.
+
+		// Select the projection matrix
+		gl.glMatrixMode(GL10.GL_PROJECTION);// OpenGL docs.
+
+		// Reset the projection matrix
+		gl.glLoadIdentity();// OpenGL docs.
+
+		// Calculate the aspect ratio of the window
+		GLU.gluPerspective(gl, 45.0f,
+		(float) width / (float) height,
+		0.1f, 100.0f);
+
+		// Select the modelview matrix
+		gl.glMatrixMode(GL10.GL_MODELVIEW);// OpenGL docs.
+
+		// Reset the modelview matrix
+		gl.glLoadIdentity();// OpenGL docs.
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
 		// TODO Auto-generated method stub
 //		Log.d(TAG, "------------- onDrawFrame(GL10 gl) is called!");
-		// Clears the screen and depth buffer.
-//		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | // OpenGL docs.
-//				GL10.GL_DEPTH_BUFFER_BIT);
-		MyOpenglES.onDrawFrame();
+//		MyOpenglES.onDrawFrame();
+		// Clears the screen and depth buffer.// 清除屏幕和深度缓存
+		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | // OpenGL docs.
+				GL10.GL_DEPTH_BUFFER_BIT);
+		
 	}
-
-	/**
-	 * 请求渲染视频 Request render video
-	 */
-	// public static void drawVideoPlay() {
-	// handler.sendEmptyMessage(R.id.videoGLES20SurfaceView_refresh_UI);
-	// }
-
 }

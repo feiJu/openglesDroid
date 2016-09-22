@@ -1,6 +1,7 @@
 package com.fenghun.openglesdroid;
 
 import com.fenghun.openglesdroid.jni.MyOpenglES;
+import com.fenghun.openglesdroid.jni.view.GLES10SurfaceView;
 import com.fenghun.openglesdroid.jni.view.GLES20SurfaceView;
 
 import android.app.Activity;
@@ -17,7 +18,10 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         FrameLayout surfaceViewFL = (FrameLayout) findViewById(R.id.surfaceViewFL);
-        GLES20SurfaceView surfaceView = new GLES20SurfaceView(this);
+        
+        //GLES20SurfaceView surfaceView = new GLES20SurfaceView(this);
+        GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
+        
         surfaceViewFL.addView(surfaceView);
         MyOpenglES.test();
     }
