@@ -4,6 +4,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.fenghun.openglesdroid.jni.MyOpenglES;
+import com.fenghun.openglesdroid.jni.bean.FlatColoredSquare;
+import com.fenghun.openglesdroid.jni.bean.SmoothColoredSquare;
 import com.fenghun.openglesdroid.jni.bean.Square;
 
 import android.content.Context;
@@ -28,8 +30,11 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 	static Handler handler;
 
 	// Initialize our square.
-	Square square = new Square();
-
+	//Square square = new Square();
+	//FlatColoredSquare square = new FlatColoredSquare();	// 顶点着色
+	SmoothColoredSquare square = new SmoothColoredSquare();	// 渐变色
+	
+	
 	float angle = 0;
 
 	public GLES10SurfaceView(Context context) {
@@ -73,6 +78,9 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Log.d(TAG,
 		// "------- onSurfaceCreated(GL10 gl, EGLConfig config) is called!");
 		// MyOpenglES.onSurfaceCreated(640, 480);
+		
+		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)， 
+		// 在OpenGL 中却是使用0…1之间的浮点数表示。 0为0，1相当于255（0xFF)。
 		// // Set the background color to black ( rgba ).
 		gl.glClearColor(0.5f, 0.0f, 0.0f, 0.5f); // OpenGL docs.
 
