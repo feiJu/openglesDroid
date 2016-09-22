@@ -25,7 +25,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)  
 LOCAL_MODULE := myOpenglES  
 LOCAL_SRC_FILES := com_fenghun_openglesdroid_jni_MyOpenglES.cpp #\ opengles20/render.cpp \ ffmpeg/decodeUtils.c
-#LOCAL_SRC_FILES += opengles20/render.cpp
+LOCAL_SRC_FILES += opengles20/render.cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/include  
 LOCAL_LDLIBS := -llog -lz -lm -L$(SYSROOT)/usr/lib -lGLESv1_CM -ldl -lGLESv2  
 LOCAL_LDLIBS += -lOpenSLES

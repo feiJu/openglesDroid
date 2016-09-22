@@ -15,6 +15,30 @@ extern "C" {
 JNIEXPORT void JNICALL Java_com_fenghun_openglesdroid_jni_MyOpenglES_test
   (JNIEnv *, jclass);
 
+/*
+ * Class:     com_fenghun_openglesdroid_jni_MyOpenglES
+ * Method:    onSurfaceCreated
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_com_fenghun_openglesdroid_jni_MyOpenglES_onSurfaceCreated
+  (JNIEnv *, jclass, jint, jint);
+
+/*
+ * Class:     com_fenghun_openglesdroid_jni_MyOpenglES
+ * Method:    onSurfaceChanged
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_com_fenghun_openglesdroid_jni_MyOpenglES_onSurfaceChanged
+  (JNIEnv *, jclass, jint, jint);
+
+/*
+ * Class:     com_fenghun_openglesdroid_jni_MyOpenglES
+ * Method:    onDrawFrame
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_fenghun_openglesdroid_jni_MyOpenglES_onDrawFrame
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

@@ -16,4 +16,11 @@ public class MyOpenglES {
 	 * 测试函数
 	 */
 	public static native void test(); 
+	
+	public static native void onSurfaceCreated(int width,int height);
+	
+	public static native void onSurfaceChanged(int width,int height);
+	
+	public static native void onDrawFrame();
+	
 }
