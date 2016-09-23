@@ -4,6 +4,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.fenghun.openglesdroid.jni.MyOpenglES;
+import com.fenghun.openglesdroid.jni.bean.Cube;
 import com.fenghun.openglesdroid.jni.bean.FlatColoredSquare;
 import com.fenghun.openglesdroid.jni.bean.SmoothColoredSquare;
 import com.fenghun.openglesdroid.jni.bean.Square;
@@ -33,6 +34,10 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 	//Square square = new Square();
 	//FlatColoredSquare square = new FlatColoredSquare();	// 顶点着色
 	SmoothColoredSquare square = new SmoothColoredSquare();	// 渐变色
+	
+	
+	
+	Cube cube = new Cube(1, 1, 1);
 	
 	
 	float angle = 0;
@@ -78,6 +83,11 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Log.d(TAG,
 		// "------- onSurfaceCreated(GL10 gl, EGLConfig config) is called!");
 		// MyOpenglES.onSurfaceCreated(640, 480);
+		
+//		cube.rx = 45;
+//		cube.ry = 45;
+	
+		
 		
 		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)， 
 		// 在OpenGL 中却是使用0…1之间的浮点数表示。 0为0，1相当于255（0xFF)。
@@ -148,6 +158,19 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// 因此我们需要将画面向后退一点距离
 		gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
 
+		
+		cube.rx = angle;
+		cube.ry = angle;
+		cube.draw(gl); 	// 绘制立方体
+		angle++;
+		angle = angle%360;
+	}
+
+	/**
+	 * 绘制测试
+	 */
+	private void drawTestRects(GL10 gl){
+
 		// SQUARE A 以屏幕中心逆时针旋转A
 		gl.glTranslatef(0, 0, -10); // 平移变换，向z轴负方向移动4个单位
 		
@@ -201,5 +224,5 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		angle = angle%360;
 		//Log.d(TAG, "----------- angle="+angle);
 	}
-
+	
 }
