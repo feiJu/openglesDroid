@@ -3,13 +3,16 @@ package com.fenghun.openglesdroid.jni.view;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.MyOpenglES;
 import com.fenghun.openglesdroid.jni.bean.Cube;
 import com.fenghun.openglesdroid.jni.bean.FlatColoredSquare;
+import com.fenghun.openglesdroid.jni.bean.SimplePlane;
 import com.fenghun.openglesdroid.jni.bean.SmoothColoredSquare;
 import com.fenghun.openglesdroid.jni.bean.Square;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.GLSurfaceView.Renderer;
@@ -30,26 +33,29 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 
 	static Handler handler;
 
+	private Context context;
+
 	// Initialize our square.
-	//Square square = new Square();
-	//FlatColoredSquare square = new FlatColoredSquare();	// 顶点着色
-	SmoothColoredSquare square = new SmoothColoredSquare();	// 渐变色
-	
-	
-	
+	// Square square = new Square();
+	// FlatColoredSquare square = new FlatColoredSquare(); // 顶点着色
+	SmoothColoredSquare square = new SmoothColoredSquare(); // 渐变色
+
 	Cube cube = new Cube(1, 1, 1);
-	
-	
+
 	float angle = 0;
+
+	SimplePlane sp = null;
 
 	public GLES10SurfaceView(Context context) {
 		super(context);
 		// TODO Auto-generated constructor stub
+		this.context = context;
 		init();
 	}
 
 	public GLES10SurfaceView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.context = context;
 		init();
 	}
 
@@ -83,13 +89,15 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Log.d(TAG,
 		// "------- onSurfaceCreated(GL10 gl, EGLConfig config) is called!");
 		// MyOpenglES.onSurfaceCreated(640, 480);
-		
-//		cube.rx = 45;
-//		cube.ry = 45;
-	
-		
-		
-		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)， 
+
+		// 创建一个简单的平面，用于绘制材质
+		sp = new SimplePlane();
+		// 有些设备对使用的Bitmap的大小有要求，要求Bitmap的宽度和长度为2的几次幂（1，2，4，8，16，32，64.。。。)，
+		// 如果使用不和要求的Bitmap来渲染，可能只会显示白色。
+		sp.loadBitmap(BitmapFactory.decodeResource(context.getResources(),
+				R.drawable.ic_launcher)); // 加载bitmap作为材质
+											
+		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)，
 		// 在OpenGL 中却是使用0…1之间的浮点数表示。 0为0，1相当于255（0xFF)。
 		// // Set the background color to black ( rgba ).
 		gl.glClearColor(0.5f, 0.0f, 0.0f, 0.5f); // OpenGL docs.
@@ -158,22 +166,40 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// 因此我们需要将画面向后退一点距离
 		gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
 
-		
-		cube.rx = angle;
-		cube.ry = angle;
-		cube.draw(gl); 	// 绘制立方体
-		angle++;
-		angle = angle%360;
+		// 绘制正方形
+		// drawTestRects(gl);
+
+		// 绘制旋转的立方体
+		// if(cube != null) drawCube(gl);
+
+		// 绘制包含材质的简单平面
+		if (sp != null)
+			sp.draw(gl);
+
 	}
 
 	/**
-	 * 绘制测试
+	 * 绘制立方体
+	 * 
+	 * @param gl
 	 */
-	private void drawTestRects(GL10 gl){
+	private void drawCube(GL10 gl) {
+		// TODO Auto-generated method stub
+		cube.rx = angle;
+		cube.ry = angle;
+		cube.draw(gl); // 绘制立方体
+		angle++;
+		angle = angle % 360;
+	}
+
+	/**
+	 * 绘制测试正方形
+	 */
+	private void drawTestRects(GL10 gl) {
 
 		// SQUARE A 以屏幕中心逆时针旋转A
 		gl.glTranslatef(0, 0, -10); // 平移变换，向z轴负方向移动4个单位
-		
+
 		// 保存当前矩阵信息
 		// Save the current matrix.
 		gl.glPushMatrix();
@@ -218,11 +244,11 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		gl.glPopMatrix();
 		// Restore to the matrix as it was before B.
 		gl.glPopMatrix();
-		
+
 		// Increse the angle.
 		angle++;
-		angle = angle%360;
-		//Log.d(TAG, "----------- angle="+angle);
+		angle = angle % 360;
+		// Log.d(TAG, "----------- angle="+angle);
 	}
-	
+
 }

@@ -7,7 +7,8 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
+import android.graphics.Bitmap;
+import android.opengl.GLUtils;
 
 /**
  * 
@@ -43,16 +44,90 @@ public class Mesh {
 	public float ry = 0;
 	public float rz = 0;
 
+	// Our UV texture buffer.
+	private FloatBuffer mTextureBuffer; // 材质坐标buffer
+
+	// Our texture id.
+	private int mTextureId = -1; // 材质id
+
+	// The bitmap we want to load as a texture.
+	private Bitmap mBitmap; //
+
+	// Indicates if we need to load the texture.
+	private boolean mShouldLoadTexture = false;
+
+	/**
+	 * 
+	 * Set the bitmap to load into a texture.
+	 * 
+	 * @param bitmap
+	 */
+
+	public void loadBitmap(Bitmap bitmap) {
+
+		this.mBitmap = bitmap;
+
+		mShouldLoadTexture = true;
+
+	}
+
+	/**
+	 * 
+	 * Loads the texture.
+	 * 
+	 * @param gl
+	 */
+
+	private void loadGLTexture(GL10 gl) {
+
+		// Generate one texture pointer...
+
+		int[] textures = new int[1];	// 材质ID数组
+
+		gl.glGenTextures(1, textures, 0);	// 获取一个材质ID
+		//textures中存放了创建的Texture ID，使用同样的Texture Id ，也可以来删除一个Texture：
+		// Delete a texture.
+		// gl.glDeleteTextures(1, textures, 0)
+		mTextureId = textures[0];
+
+		// ...and bind it to our array
+		gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureId);	// 绑定指定id的材质
+
+		// Create Nearest Filtered Texture
+		// 渲染Texture方式，GL10.GL_LINEAR和GL10.GL_NEAREST
+		gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER,
+				GL10.GL_LINEAR); // 材质比渲染区域小时的渲染方式
+
+		gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER,
+				GL10.GL_LINEAR); // 材质比渲染区域大时的渲染方式
+
+		// 如果材质
+		// Different possible texture parameters, 
+		// e.g. 
+		// GL10.GL_CLAMP_TO_EDGE 只靠边线绘制一次。
+		// GL_REPEAT 重复绘制
+		gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S,
+				GL10.GL_REPEAT); // 横向
+
+		gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T,
+				GL10.GL_CLAMP_TO_EDGE);	// 纵向
+
+		// Use the Android GLUtils to specify a two-dimensional texture image
+		// from our bitmap
+		GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, mBitmap, 0);
+
+	}
+
 	public void draw(GL10 gl) {
 
 		// Counter-clockwise winding.
 		gl.glFrontFace(GL10.GL_CCW);
 
 		// Enable face culling.
-		//gl.glEnable(GL10.GL_CULL_FACE);
+		// gl.glEnable(GL10.GL_CULL_FACE);
 
 		// What faces to remove with the face culling.
-		//gl.glCullFace(GL10.GL_BACK);
+		// gl.glCullFace(GL10.GL_BACK);
 
 		// Enabled the vertices buffer for writing and
 		// to be used during
@@ -75,14 +150,29 @@ public class Mesh {
 			gl.glColorPointer(4, GL10.GL_FLOAT, 0, colorBuffer);
 		}
 
+		if (mShouldLoadTexture) {
+			loadGLTexture(gl);
+			mShouldLoadTexture = false;
+		}
+
+		if (mTextureId != -1 && mTextureBuffer != null) {
+
+			gl.glEnable(GL10.GL_TEXTURE_2D);
+
+			// Enable the texture state
+			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+
+			// Point to our buffers
+			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuffer);
+
+			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureId);
+		}
+
 		gl.glTranslatef(x, y, z);
 		gl.glRotatef(rx, 1, 0, 0);
 		gl.glRotatef(ry, 0, 1, 0);
 		gl.glRotatef(rz, 0, 0, 1);
 
-		
-		Log.d("----------- numOfIndices = ", numOfIndices+",indicesBuffer.capacity()"+indicesBuffer.capacity());
-		
 		// Point out the where the color buffer is.
 		gl.glDrawElements(GL10.GL_TRIANGLES, numOfIndices,
 				GL10.GL_UNSIGNED_SHORT, indicesBuffer);
@@ -91,19 +181,20 @@ public class Mesh {
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
 		// Disable face culling.
-		//gl.glDisable(GL10.GL_CULL_FACE);
+		// gl.glDisable(GL10.GL_CULL_FACE);
 
 	}
 
 	/**
 	 * 允许子类重新定义顶点坐标
+	 * 
 	 * @param vertices
 	 */
 	protected void setVertices(float[] vertices) {
 		// a float is bytes, therefore
 		// we multiply the number if
 		// vertices with .
-		ByteBuffer vbb= ByteBuffer.allocateDirect(vertices.length * 4);
+		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
 		verticesBuffer = vbb.asFloatBuffer();
 		verticesBuffer.put(vertices);
@@ -112,6 +203,7 @@ public class Mesh {
 
 	/**
 	 * 允许子类重新定义顶点的顺序
+	 * 
 	 * @param indices
 	 */
 	protected void setIndices(short[] indices) {
@@ -119,7 +211,7 @@ public class Mesh {
 		// short is bytes, therefore we multiply
 		// the number if
 		// vertices with .
-		ByteBuffer ibb= ByteBuffer.allocateDirect(indices.length * 2);
+		ByteBuffer ibb = ByteBuffer.allocateDirect(indices.length * 2);
 		ibb.order(ByteOrder.nativeOrder());
 		indicesBuffer = ibb.asShortBuffer();
 		indicesBuffer.put(indices);
@@ -129,12 +221,13 @@ public class Mesh {
 
 	/**
 	 * 允许子类重新定义颜色
+	 * 
 	 * @param red
 	 * @param green
 	 * @param blue
 	 * @param alpha
 	 */
-	protected void setColor(float red, float green,float blue, float alpha) {
+	protected void setColor(float red, float green, float blue, float alpha) {
 		// Setting the flat color.
 		rgba[0] = red;
 		rgba[1] = green;
@@ -144,16 +237,38 @@ public class Mesh {
 
 	/**
 	 * 允许子类重新定义颜色。
+	 * 
 	 * @param colors
 	 */
 	protected void setColors(float[] colors) {
 
 		// float has bytes.
 
-		ByteBuffer cbb= ByteBuffer.allocateDirect(colors.length * 4);
+		ByteBuffer cbb = ByteBuffer.allocateDirect(colors.length * 4);
 		cbb.order(ByteOrder.nativeOrder());
 		colorBuffer = cbb.asFloatBuffer();
 		colorBuffer.put(colors);
 		colorBuffer.position(0);
+	}
+
+	/**
+	 * 
+	 * Set the texture coordinates.
+	 * 
+	 * 设置材质坐标
+	 * 
+	 * @param textureCoords
+	 */
+
+	protected void setTextureCoordinates(float[] textureCoords) {
+
+		// float is 4 bytes, therefore we multiply the number if
+		// vertices with 4.
+		ByteBuffer byteBuf = ByteBuffer
+				.allocateDirect(textureCoords.length * 4);
+		byteBuf.order(ByteOrder.nativeOrder());
+		mTextureBuffer = byteBuf.asFloatBuffer();
+		mTextureBuffer.put(textureCoords);
+		mTextureBuffer.position(0);
 	}
 }
