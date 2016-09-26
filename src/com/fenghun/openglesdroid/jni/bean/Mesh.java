@@ -120,15 +120,18 @@ public class Mesh {
 
 	public void draw(GL10 gl) {
 
+		//gl.glLoadIdentity();// 重置当前的模型观察矩阵
+		
 		// Counter-clockwise winding.
 		gl.glFrontFace(GL10.GL_CCW);
 
 		// Enable face culling.
-		// gl.glEnable(GL10.GL_CULL_FACE);
+		//gl.glEnable(GL10.GL_CULL_FACE);
 
 		// What faces to remove with the face culling.
-		// gl.glCullFace(GL10.GL_BACK);
-
+		//gl.glCullFace(GL10.GL_BACK);
+		
+		
 		// Enabled the vertices buffer for writing and
 		// to be used during
 		// rendering.
@@ -137,6 +140,13 @@ public class Mesh {
 		// Specifies the location and data format
 		// of an array of vertex
 		// coordinates to use when rendering.
+		/**
+		 * size: 每个顶点坐标维数，可以为2，3，4。
+		 * type: 顶点的数据类型，可以为GL_BYTE, GL_SHORT, GL_FIXED,或 GL_FLOAT，缺省为浮点类型GL_FLOAT。
+		 * stride: 每个相邻顶点之间在数组中的间隔（字节数），缺省为0，表示顶点存储之间无间隔。
+		 * pointer: 存储顶点的数组。
+		 * 
+		 */
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, verticesBuffer);
 
 		// Set flat color
@@ -180,6 +190,11 @@ public class Mesh {
 		// Disable the vertices buffer.
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
+		// Disable the colors buffer.
+		if (colorBuffer != null) {
+			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+		}
+		
 		// Disable face culling.
 		// gl.glDisable(GL10.GL_CULL_FACE);
 

@@ -5,6 +5,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.MyOpenglES;
+import com.fenghun.openglesdroid.jni.bean.Base2DGraphics;
+import com.fenghun.openglesdroid.jni.bean.Base3DGraphics;
 import com.fenghun.openglesdroid.jni.bean.Cube;
 import com.fenghun.openglesdroid.jni.bean.FlatColoredSquare;
 import com.fenghun.openglesdroid.jni.bean.SimplePlane;
@@ -45,6 +47,10 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 	float angle = 0;
 
 	SimplePlane sp = null;
+	
+	Base2DGraphics base2DGraphics = null;	// 基本2D图形类
+	
+	Base3DGraphics base3DGraphics = null;	// 基本3D图形类
 
 	public GLES10SurfaceView(Context context) {
 		super(context);
@@ -90,6 +96,9 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// "------- onSurfaceCreated(GL10 gl, EGLConfig config) is called!");
 		// MyOpenglES.onSurfaceCreated(640, 480);
 
+		base2DGraphics = new Base2DGraphics();
+		base3DGraphics = new Base3DGraphics();
+		
 		// 创建一个简单的平面，用于绘制材质
 		sp = new SimplePlane();
 		// 有些设备对使用的Bitmap的大小有要求，要求Bitmap的宽度和长度为2的几次幂（1，2，4，8，16，32，64.。。。)，
@@ -100,7 +109,7 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)，
 		// 在OpenGL 中却是使用0…1之间的浮点数表示。 0为0，1相当于255（0xFF)。
 		// // Set the background color to black ( rgba ).
-		gl.glClearColor(0.5f, 0.0f, 0.0f, 0.5f); // OpenGL docs.
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // OpenGL docs.
 
 		// Enable Smooth Shading, default not really needed.
 		gl.glShadeModel(GL10.GL_SMOOTH);// OpenGL docs.
@@ -151,6 +160,10 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// TODO Auto-generated method stub
 		// Log.d(TAG, "------------- onDrawFrame(GL10 gl) is called!");
 		// MyOpenglES.onDrawFrame();
+		/**
+		 * OpenGL ES 内部存放图形数据的Buffer有COLOR ,DEPTH (深度信息）等，
+		 * 在绘制图形之前一般需要清空COLOR 和 DEPTH Buffer。
+		 */
 		// Clears the screen and depth buffer.// 清除屏幕和深度缓存
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | // OpenGL docs.
 				GL10.GL_DEPTH_BUFFER_BIT);
@@ -166,15 +179,25 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// 因此我们需要将画面向后退一点距离
 		gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
 
+		// 绘制2D基本图形
+		//base2DGraphics.drawPoints(gl);	// 绘制点
+		//base2DGraphics.drawLineSegments(gl);	// 绘制线段
+		//base2DGraphics.drawTrangles(gl);	// 绘制三角形
+		
+		// 绘制3D基本图形
+		base3DGraphics.drawPositive20surface(gl);
+		
+		
+		
 		// 绘制正方形
 		// drawTestRects(gl);
 
 		// 绘制旋转的立方体
-		// if(cube != null) drawCube(gl);
+		//if(cube != null) drawCube(gl);
 
 		// 绘制包含材质的简单平面
-		if (sp != null)
-			sp.draw(gl);
+//		if (sp != null)
+//			sp.draw(gl);
 
 	}
 
