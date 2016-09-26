@@ -1,0 +1,11 @@
+1. opengl es API 命名规范
+    定义的常量都以GL_为前缀。比如GL10.GL_COLOR_BUFFER_BIT
+    OpenGL ES 指令以gl开头 ，比如gl.glClearColor
+    某些OpenGL指令以3f 或4f结尾，3和4代表参数的个数,f代表参数类型为浮点数,如gl.glColor4f ，i,x 代表 int如 gl.glColor4x
+    对应以v结尾的OpenGL ES 指令，代表参数类型为一个矢量(Vector) ，如 glTexEnvfv
+    所有8-bit整数对应到byte 类型，16-bit 对应到short类型,32-bit整数(包括GLFixed)对应到int类型，而所有32-bit 浮点数对应到float 类型。
+    GL_TRUE,GL_FALSE 对应到boolean类型
+    C字符串((char*)) 对应到Java 的 UTF-8 字符串。
+2. 
+
+
