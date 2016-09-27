@@ -20,6 +20,18 @@
 3. opengles 基本图形
 	3.1 OpenGL ES 支持绘制的基本几何图形分为三类：点，线段，三角形。也就是说OpenGL ES 只能绘制这三种基本几何图形。任何复杂的2D或是3D图形都是通过这三种几何图形构造而成的。
 	比如下图复杂的3D图形，都有将其分割成细小的三角形面而构成的。然后通过上色(Color)，添加材质(Texture)，再添加光照（lighting)，构造3D效果的图形：	
-	
+4. 使用3D建模，由OpenGL ES库来完成从3D模型到二维屏幕上的显示。这个过程可以分成三个部分：
+	4.1 坐标变换，坐标变换通过使用变换矩阵来描述，因此学习3D绘图需要了解一些空间几何，矩阵运算的知识。三维坐标通常使用齐次坐标来定义。变换矩阵操作可以分为视角（Viewing），模型（Modeling）和投影（Projection）操作，这些操作可以有选择，平移，缩放，正侧投影，透视投影等。
+	4.2 由于最终的3D模型需要在一个矩形窗口中显示，因此在这个窗口之外的部分需要裁剪掉以提高绘图效率，对应3D图形，裁剪是将处在剪切面之外的部分扔掉。
+	4.3 在最终绘制到显示器（2D屏幕），需要建立起变换后的坐标和屏幕像素之间的对应关系，这通常称为“视窗”坐标变换(Viewport) transformation.
+5. 	图“opengles_坐标变换过程1.png”为Android OpenGL ES坐标变换的过程：
+    5.1 Object Coordinate System: 也称作Local coordinate System，用来定义一个模型本身的坐标系。
+    5.2 World Coordinate System: 3d 虚拟世界中的绝对坐标系，定义好这个坐标系的原点就可以用来描述模型的实现的位置，Camera 的位置，光源的位置。
+    5.3 View Coordinate System: 一般使用用来计算光照效果。
+    5.4 Clip Coordinate System:  对3D场景使用投影变换裁剪视锥。
+    5.5 Normalized device coordinate System (NDC): 规范后坐标系。
+    5.6 Windows Coordinate System: 最后屏幕显示的2D坐标系统，一般原点定义在屏幕左上角。
+	结合图“opengles_坐标变换过程2.png”对比理解，
+	对于Viewing transformation (平移，选择相机）和Modeling transformation（平移，选择模型）可以合并起来看，只是应为向左移动相机，和相机不同将模型右移的效果是等效的。
 	
 
