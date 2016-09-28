@@ -1,5 +1,9 @@
 package com.fenghun.openglesdroid.jni.view;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -47,10 +51,10 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 	float angle = 0;
 
 	SimplePlane sp = null;
-	
-	Base2DGraphics base2DGraphics = null;	// 基本2D图形类
-	
-	Base3DGraphics base3DGraphics = null;	// 基本3D图形类
+
+	Base2DGraphics base2DGraphics = null; // 基本2D图形类
+
+	Base3DGraphics base3DGraphics = null; // 基本3D图形类
 
 	public GLES10SurfaceView(Context context) {
 		super(context);
@@ -98,14 +102,14 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 
 		base2DGraphics = new Base2DGraphics();
 		base3DGraphics = new Base3DGraphics();
-		
+
 		// 创建一个简单的平面，用于绘制材质
 		sp = new SimplePlane();
 		// 有些设备对使用的Bitmap的大小有要求，要求Bitmap的宽度和长度为2的几次幂（1，2，4，8，16，32，64.。。。)，
 		// 如果使用不和要求的Bitmap来渲染，可能只会显示白色。
 		sp.loadBitmap(BitmapFactory.decodeResource(context.getResources(),
 				R.drawable.ic_launcher)); // 加载bitmap作为材质
-											
+
 		// 颜色的定义通常使用Hex格式0xFF00FF 或十进制格式(255,0,255)，
 		// 在OpenGL 中却是使用0…1之间的浮点数表示。 0为0，1相当于255（0xFF)。
 		// // Set the background color to black ( rgba ).
@@ -161,8 +165,8 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Log.d(TAG, "------------- onDrawFrame(GL10 gl) is called!");
 		// MyOpenglES.onDrawFrame();
 		/**
-		 * OpenGL ES 内部存放图形数据的Buffer有COLOR ,DEPTH (深度信息）等，
-		 * 在绘制图形之前一般需要清空COLOR 和 DEPTH Buffer。
+		 * OpenGL ES 内部存放图形数据的Buffer有COLOR ,DEPTH (深度信息）等， 在绘制图形之前一般需要清空COLOR 和
+		 * DEPTH Buffer。
 		 */
 		// Clears the screen and depth buffer.// 清除屏幕和深度缓存
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | // OpenGL docs.
@@ -171,21 +175,27 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Replace the current matrix with the identity matrix
 		// 因为每次调用onDrawFrame 时，glTranslatef(0, 0, -4)每次都再向后移动4个单位，
 		// 正方形迅速后移直至看不见,需要加上重置Matrix的代码。
-		gl.glLoadIdentity();// 重置当前的模型观察矩阵
+		//gl.glLoadIdentity();// 重置当前的模型观察矩阵，即将当前矩阵设为单位矩阵
 
 		// Translates 4 units into the screen.
 		// OpenGL ES从当前位置开始渲染，缺省坐标为(0,0,0)，和View port 的坐标一样，
 		// 相当于把画面放在眼前，对应这种情况OpenGL不会渲染离view Port很近的画面，
 		// 因此我们需要将画面向后退一点距离
-		gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
+		//gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
 
 		// 绘制2D基本图形
-		//base2DGraphics.drawPoints(gl);	// 绘制点
-		//base2DGraphics.drawLineSegments(gl);	// 绘制线段
-		//base2DGraphics.drawTrangles(gl);	// 绘制三角形
-		
+		// base2DGraphics.drawPoints(gl); // 绘制点
+		// base2DGraphics.drawLineSegments(gl); // 绘制线段
+		// base2DGraphics.drawTrangles(gl); // 绘制三角形
+		// base2DGraphics.drawMiniSolarSystem(gl); // 迷你太阳系
+
 		// 绘制3D基本图形
-		base3DGraphics.drawPositive20surface(gl);
+		// base3DGraphics.drawPositive20surface(gl);
+		//initSphereScene(gl);
+		//base3DGraphics.drawSphere(gl);	// 绘制球体
+
+		base3DGraphics.initTestLightScene(gl);
+		base3DGraphics.drawMaterialSphere(gl,true);
 		
 		
 		
@@ -193,11 +203,11 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// drawTestRects(gl);
 
 		// 绘制旋转的立方体
-		//if(cube != null) drawCube(gl);
+		// if(cube != null) drawCube(gl);
 
 		// 绘制包含材质的简单平面
-//		if (sp != null)
-//			sp.draw(gl);
+		// if (sp != null)
+		// sp.draw(gl);
 
 	}
 
@@ -272,6 +282,66 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		angle++;
 		angle = angle % 360;
 		// Log.d(TAG, "----------- angle="+angle);
+	}
+
+	/**
+	 * 为了看出球体的效果，添加光照效果
+	 * 
+	 * @param gl
+	 */
+	private void initSphereScene(GL10 gl) {
+		float[] mat_amb = { 0.2f * 1.0f, 0.2f * 0.4f, 0.2f * 0.4f, 1.0f, };
+		float[] mat_diff = { 1.0f, 0.4f, 0.4f, 1.0f, };
+		float[] mat_spec = { 1.0f, 1.0f, 1.0f, 1.0f, };
+
+		ByteBuffer mabb = ByteBuffer.allocateDirect(mat_amb.length * 4);
+		mabb.order(ByteOrder.nativeOrder());
+		FloatBuffer mat_ambBuf = mabb.asFloatBuffer();
+		mat_ambBuf.put(mat_amb);
+		mat_ambBuf.position(0);
+
+		ByteBuffer mdbb = ByteBuffer.allocateDirect(mat_diff.length * 4);
+		mdbb.order(ByteOrder.nativeOrder());
+		FloatBuffer mat_diffBuf = mdbb.asFloatBuffer();
+		mat_diffBuf.put(mat_diff);
+		mat_diffBuf.position(0);
+
+		ByteBuffer msbb = ByteBuffer.allocateDirect(mat_spec.length * 4);
+		msbb.order(ByteOrder.nativeOrder());
+		FloatBuffer mat_specBuf = msbb.asFloatBuffer();
+		mat_specBuf.put(mat_spec);
+		mat_specBuf.position(0);
+
+		gl.glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
+		gl.glEnable(GL10.GL_DEPTH_TEST);
+		gl.glEnable(GL10.GL_CULL_FACE);
+		gl.glShadeModel(GL10.GL_SMOOTH);
+
+		gl.glEnable(GL10.GL_LIGHTING);
+		gl.glEnable(GL10.GL_LIGHT0);
+
+		
+		/**
+		 * 设置物体表面材料(Material)的反光属性（颜色和材质）
+		 * 
+		 * face : 在OpenGL ES中只能使用GL_FRONT_AND_BACK，表示修改物体的前面和后面的材质光线属性。
+		 * pname: 参数类型，可以有GL_AMBIENT, GL_DIFFUSE, GL_SPECULAR, GL_EMISSION, GL_SHININESS。这些参数用在光照方程。
+		 * param：  参数的值。
+		 * 其中GL_AMBIENT,GL_DIFFUSE,GL_SPECULAR ，GL_EMISSION为颜色RGBA值，GL_SHININESS 值可以从0到128，值越大，光的散射越小：
+		 */
+		gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat_ambBuf);
+		gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat_diffBuf);
+		gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mat_specBuf);
+		gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, 64.0f);
+
+		gl.glLoadIdentity();
+		GLU.gluLookAt(gl, 
+				
+				0.0f, 0.0f, 10.0f, 
+				
+				0.0f, 0.0f, 0.0f, 
+				
+				0.0f, 1.0f, 0.0f);
 	}
 
 }

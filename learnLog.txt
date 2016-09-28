@@ -33,5 +33,41 @@
     5.6 Windows Coordinate System: 最后屏幕显示的2D坐标系统，一般原点定义在屏幕左上角。
 	结合图“opengles_坐标变换过程2.png”对比理解，
 	对于Viewing transformation (平移，选择相机）和Modeling transformation（平移，选择模型）可以合并起来看，只是应为向左移动相机，和相机不同将模型右移的效果是等效的。
-	
+6.  矩阵变换
+	6.1 ModelViewMatrix变换矩阵，Viewing和Modeling 变换关系紧密，对应到相机拍照为放置三角架和调整被拍物体位置及角度，通常将这两个变换使用一个modelview 变换矩阵来定义
+	6.2 ProjectionMatrix投影变换矩阵OpenGL ES可以使用两种不同的投影变换：透视投影（Perspective Projection）和正侧投影（Orthographic Projection）。	
+	6.3 ViewPort（显示区域）为一个长方形区域，并且使用屏幕坐标系来定义
+7.	光照效果
+	7.1 Emitted ： 一般只发光物体或者光源，这种光不受其它光源的影响。
 
+	7.2 ambient: 指光线经过多次反射后已经无法得知其方向（可以看作来自所有方向），可以成为环境光，该光源如果射到某个平面，其反射方向为所有方向。Ambient 不依赖于光源的方向。
+
+	7.3 diffuse:当一束平行的入射光线射到粗糙的表面时，因面上凹凸不平，所以入射线虽然互相平行，由于各点的法线方向不一致，造成反射光线向不同的方向无规则地反射，这种反射称之为“漫反射”或“漫射”。这个反射的光则称为漫射光。漫射光射到某个平面时，其反射方向也为所有方向。diffuse 只依赖于光源的方向和法线的方向。
+
+	7.4 specular ： 一般指物体被光源直射的高亮区域，也可以成为镜面反射区，如金属。specular依赖于光源的方向，法线的方向和视角的方向。
+8.	光源
+	penGL ES光源可以分为
+	8.1 平行光源(Parallel light source), 代表由位于无限远处均匀发光体，太阳可以近似控制平行光源。
+	8.2 点光源(Spot light source)  如灯泡就是一个点光源，发出的光可以指向360度，可以为点光源设置光衰减属性（attenuation)或者让点光源只能射向某个方向（如射灯）。
+	8.3 可以为图形的不同部分设置不同的光源。
+9.	参数设置
+	1.1. 平行光将GL_POSITION的(x,y,z,w)中的w 设为0.0，(x,y,z)为平行光的方向：
+	1.2. 对于点光源，将 w 设成非0值，通常设为1.0. (x,y,z)为点光源的坐标位置。
+	1.3. 将点光源设置成聚光灯，需要同时设置GL_SPOT_DIRECTION,GL_SPOT_CUTOFF等 参数，GL_POSITION的设置和点光源类似：将 w 设成非0值，
+	 通常设为1.0. (x,y,z)为点光源的坐标位置。而对于GL_SPOT_DIRECTION 参数，设置聚光的方向(x,y,z)
+	1.4. GL_SPOT_CUTOFF 参数设置聚光灯发散角度（0到90度）
+	1.5. GL_SPOT_EXPONENT 给出了聚光灯光源汇聚光的程度，值越大，则聚光区域越小（聚光能力更强）。
+	1.6. 对应点光源（包括聚光灯），其它几个参数GL_CONSTANT_ATTENUATION,  GL_LINEAR_ATTENUATION,  GL_QUADRATIC_ATTENUATION 
+	 为点光源设置光线衰减参数，	
+10. 物体表面材料(Material)的反光属性
+	10.1 face : 在OpenGL ES中只能使用GL_FRONT_AND_BACK，表示修改物体的前面和后面的材质光线属性。
+    10.2 pname: 参数类型，可以有GL_AMBIENT, GL_DIFFUSE, GL_SPECULAR, GL_EMISSION, GL_SHININESS。这些参数用在光照方程。
+    10.3 param：  参数的值。
+	其中GL_AMBIENT,GL_DIFFUSE,GL_SPECULAR ，GL_EMISSION为颜色RGBA值，GL_SHININESS 值可以从0到128，值越大，光的散射越小：
+	10.4 方法glLightModleXX给出了光照模型的参数
+		public void glLightModelf(int pname,float param)
+		public void glLightModelfv(int pname,float[] params,int offset)
+		public void glLightModelfv(int pname,FloatBuffer params)
+    pname: 参数类型，可以为GL_LIGHT_MODEL_AMBIENT和GL_LIGHT_MODEL_TWO_SIDE
+    params: 参数的值。
+	最终顶点的颜色由这些参数（光源，材质光学属性，光照模型）综合决定（光照方程计算出）。

@@ -6,6 +6,8 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.opengl.GLU;
+
 /**
  * 基本的二维图像
  * 
@@ -51,6 +53,14 @@ public class Base2DGraphics {
 			0.4f * 1.732f, 0.0f, };
 	FloatBuffer vertex_triangles_buffer;
 
+	private Star sun = new Star(); // 太阳
+	
+	private Star earth = new Star();	// 地球
+	
+	private Star moon = new Star();	// 月球
+
+	private int angle = 0;
+	
 	public Base2DGraphics() {
 		// TODO Auto-generated constructor stub
 
@@ -128,28 +138,6 @@ public class Base2DGraphics {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		// switch (index) {
-		// case 0:
-		// case 1:
-		// case 2:
-		// gl.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-		// gl.glDrawArrays(GL10.GL_LINES, 0, 4);
-		// break;
-		// case 3:
-		// case 4:
-		// case 5:
-		// gl.glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-		// gl.glDrawArrays(GL10.GL_LINE_STRIP, 0, 4);
-		// break;
-		// case 6:
-		// case 7:
-		// case 8:
-		// case 9:
-		// gl.glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-		// gl.glDrawArrays(GL10.GL_LINE_LOOP, 0, 4);
-		// break;
-		// }
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
 	}
@@ -169,9 +157,7 @@ public class Base2DGraphics {
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_triangles_buffer);
 
 		index++;
-
 		index %= 3;
-
 		if (index == 0) {
 			gl.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
 			gl.glDrawArrays(GL10.GL_TRIANGLES, 0, 6);
@@ -188,49 +174,104 @@ public class Base2DGraphics {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		// switch (index) {
-		//
-		// case 0:
-		//
-		// case 1:
-		//
-		// case 2:
-		//
-		// gl.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-		//
-		// gl.glDrawArrays(GL10.GL_TRIANGLES, 0, 6);
-		//
-		// break;
-		//
-		// case 3:
-		//
-		// case 4:
-		//
-		// case 5:
-		//
-		// gl.glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-		//
-		// gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 6);
-		//
-		// break;
-		//
-		// case 6:
-		//
-		// case 7:
-		//
-		// case 8:
-		//
-		// case 9:
-		//
-		// gl.glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-		//
-		// gl.glDrawArrays(GL10.GL_TRIANGLE_FAN, 0, 6);
-		//
-		// break;
-		//
-		// }
-
 		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+	}
+
+	/**
+	 * 绘制迷你太阳系
+	 * 
+	 * 太阳居中，逆时针自转。
+	 * 地球绕太阳顺时针公转，本身不自转。旋转和平移操作的顺序影响实现的效果
+	 * 月亮绕地球顺时针公转，自身逆时针自转。
+	 * 
+	 * @param gl
+	 */
+	public void drawMiniSolarSystem(GL10 gl) {
+		gl.glLoadIdentity();	// 重置观察矩阵
+
+		/**
+		 * param1:eyex,eyey,eyez 指定观测点的空间坐标。（camera的位置）
+    	 * param2:centerX,centerY,centerZ,指定被观测物体的参考点的坐标。
+    	 * param3:upx,upy,upz 指定观测点方向为“上”的向量。
+    	 * 
+    	 * 注：这些坐标都采用世界坐标系。
+		 */
+		// 设置modelview变换矩阵，将摄像机摆放在z轴上正方向15个单位处，
+		// 物体摆放在坐标原点处，
+		// param3暂时没有理解是什么意思
+		GLU.gluLookAt(gl, 0.0f, 0.0f, 15.0f,
+
+		0.0f, 0.0f, 0.0f,
+
+		0.0f, 1.0f, 0.0f);	
+
+		// Star A
+		// Save the current matrix.
+		gl.glPushMatrix(); // 在栈中保存当前矩阵
+
+		// Rotate Star A counter-clockwise.
+		gl.glRotatef(angle, 0, 0, 1);	// 绕Z轴旋转
+		gl.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);	// 红色，不透明
+		// Draw Star A.
+		sun.draw(gl);
+		// Restore the last matrix.
+		gl.glPopMatrix();	// 在从栈中恢复所存矩阵
+
+		// Star B
+		// Save the current matrix
+		gl.glPushMatrix();
+
+		
+		/**
+		 * 1.
+		 * gl.glRotatef
+		 * gl.glTranslatef
+		 * 这样的代码顺序是先设置了旋转的中心点，然后平移，在矩阵变换时
+		 * 先计算的平移的矩阵乘法，后计算的旋转的矩阵乘法，与代码顺序相反。
+		 * 
+		 * 2. 
+		 * gl.glTranslatef
+		 * gl.glRotatef
+		 * 这样的代码顺序是先平移，然后以平移后的点为旋转中心，
+		 * 在矩阵变换时，先计算的旋转矩阵乘法，在计算平移矩阵乘法，与代码执行顺序相反。
+		 */
+		// Rotate Star B before moving it,
+		// making it rotate around A.
+		gl.glRotatef(-angle, 0, 0, 1);	// 绕Z轴旋转，当前的状态是以（0,0,0）为中心
+		// Move Star B.
+		gl.glTranslatef(3, 0, 0);	// 在X轴正方向上平移3个单位
+
+		// Scale it to 50% of Star A
+		gl.glScalef(.5f, .5f, .5f);	// 缩小为A的一半
+		gl.glColor4f(0.0f, 0.0f, 1.0f, 1.0f);	// 蓝色不透明
+		// Draw Star B.
+		earth.draw(gl);
+
+		// Star C
+		// Save the current matrix
+		gl.glPushMatrix();
+
+		// Make the rotation around B
+		gl.glRotatef(-angle, 0, 0, 1);	// 绕Z轴旋转，当前的旋转中心点在B旋转平移后的位置
+		gl.glTranslatef(2, 0, 0);
+
+		// Scale it to 50% of Star B
+		gl.glScalef(.5f, .5f, .5f);
+
+		// Rotate around it's own center.
+		gl.glRotatef(angle * 10, 0, 0, 1);
+		gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		
+		// Draw Star C.
+		moon.draw(gl);
+
+		// Restore to the matrix as it was before C.
+		gl.glPopMatrix();
+
+		// Restore to the matrix as it was before B.
+		gl.glPopMatrix();
+
+		// Increse the angle.
+		angle++;
 	}
 }
