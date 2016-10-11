@@ -194,7 +194,7 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		//initSphereScene(gl);
 		//base3DGraphics.drawSphere(gl);	// 绘制球体
 
-		base3DGraphics.initTestLightScene(gl);
+		base3DGraphics.initTestLightScene(gl);	// 光源和材质反光特性
 		base3DGraphics.drawMaterialSphere(gl,true);
 		
 		
