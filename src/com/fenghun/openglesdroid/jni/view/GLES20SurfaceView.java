@@ -3,6 +3,7 @@ package com.fenghun.openglesdroid.jni.view;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.jni.bean20.Square;
 import com.fenghun.openglesdroid.jni.bean20.Triangle;
 import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
 
@@ -40,6 +41,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 	private Triangle mTriangle;
 
+	private Square square;
+	
 	/**
 	 * OpenGL ES 2.0 中，在有效的顶点着色器和片段着色器被装载前，什么渲染都做不了。
 	 * 我们介绍管线时介绍了顶点着色器和片段着色器，做任何渲染前，必须有顶点和片段着色器。
@@ -95,6 +98,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 		// 初始化一个三角形
 		mTriangle = new Triangle();
+		
+		square = new Square();
 
 		int vertexShader = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER,
 				vertexShaderCode); // 加载顶点着色器
@@ -104,6 +109,11 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		/**
 		 * 一旦应用程序已经创建了顶点、片段着色器对象，它需要去创建项目对象，项目是最终的链接对象，
 		 * 每个着色器在被绘制前都应该联系到项目或者项目对象。
+		 * 
+		 * 源码输入着色器对象，着色器对象被编辑为目标格式（.obj 文件）。完成后着色器对象能够链接到项目对象上，一个项目可以有多个着色器
+		 * 
+		 * OpenGL ES 中一个项目中有一个顶点着色器和一个片段着色器（不能多不能少），然后链接成可执行文件，最后能用来渲染。
+		 * 
 		 */
 		mProgram = GLES20.glCreateProgram(); // 创建一个空的OpenGL ES Program
 
@@ -172,6 +182,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		GLES20.glUseProgram(mProgram);// 将program加入OpenGL ES环境中
 		GLES20Utils.checkGlError(TAG, "glUseProgram");
 		
-		mTriangle.draw(mProgram, mPositionHandle, mColorHandle); // 绘制三角形
+		//mTriangle.draw(mProgram, mPositionHandle, mColorHandle); // 绘制三角形
+		square.draw(mProgram, mPositionHandle, mColorHandle); // 绘制三角形
 	}
 }
