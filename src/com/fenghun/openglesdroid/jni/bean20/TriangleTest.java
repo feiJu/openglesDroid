@@ -23,8 +23,8 @@ public class TriangleTest {
 	 * 
 	 */
 	private final FloatBuffer mTriangle1Vertices;
-	// private final FloatBuffer mTriangle2Vertices;
-	// private final FloatBuffer mTriangle3Vertices;
+	private final FloatBuffer mTriangle2Vertices;
+	private final FloatBuffer mTriangle3Vertices;
 
 	/**
 	 * Allocate storage for the final combined matrix. This will be passed into
@@ -65,6 +65,35 @@ public class TriangleTest {
 				0.0f, 1.0f, 0.0f, 1.0f // 颜色值
 
 		};
+		
+		final float[] triangle2VerticesData = {
+				// X, Y, Z,
+				// R, G, B, A
+				-0.5f, -0.25f, 0.0f, // 坐标值
+				1.0f, 1.0f, 0.0f, 1.0f, // 颜色值
+
+				0.5f, -0.25f, 0.0f, // 坐标值
+				0.0f, 1.0f, 1.0f, 1.0f, // 颜色值
+
+				0.0f, 0.559016994f, 0.0f, // 坐标值
+				1.0f, 0.0f, 1.0f, 1.0f // 颜色值
+
+		};
+		
+		final float[] triangle3VerticesData = {
+				// X, Y, Z,
+				// R, G, B, A
+				-0.5f, -0.25f, 0.0f, // 坐标值
+				1.0f, 1.0f, 1.0f, 1.0f, // 颜色值
+
+				0.5f, -0.25f, 0.0f, // 坐标值
+				0.5f, 0.5f, 0.5f, 1.0f, // 颜色值
+
+				0.0f, 0.559016994f, 0.0f, // 坐标值
+				0.0f, 0.0f, 0.0f, 1.0f // 颜色值
+
+		};
+		
 
 		// Initialize the buffers. 初始化缓存
 		mTriangle1Vertices = ByteBuffer
@@ -72,9 +101,15 @@ public class TriangleTest {
 				.order(ByteOrder.nativeOrder()).asFloatBuffer();
 		mTriangle1Vertices.put(triangle1VerticesData).position(0);
 
-		// mTriangle2Vertices = ByteBuffer
-		// .allocateDirect(triangle2VerticesData.length * mBytesPerFloat)
-		// .order(ByteOrder.nativeOrder()).asFloatBuffer();
+		 mTriangle2Vertices = ByteBuffer
+		 .allocateDirect(triangle2VerticesData.length * mBytesPerFloat)
+		 .order(ByteOrder.nativeOrder()).asFloatBuffer();
+		 mTriangle2Vertices.put(triangle2VerticesData).position(0);
+		 
+		 mTriangle3Vertices = ByteBuffer
+				 .allocateDirect(triangle3VerticesData.length * mBytesPerFloat)
+				 .order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mTriangle3Vertices.put(triangle3VerticesData).position(0);
 
 	}
 
@@ -119,4 +154,13 @@ public class TriangleTest {
 	public FloatBuffer getmTriangle1Vertices() {
 		return mTriangle1Vertices;
 	}
+
+	public FloatBuffer getmTriangle2Vertices() {
+		return mTriangle2Vertices;
+	}
+
+	public FloatBuffer getmTriangle3Vertices() {
+		return mTriangle3Vertices;
+	}
+	
 }

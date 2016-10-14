@@ -106,6 +106,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
     private float[] mModelMatrix = new float[16];
     
     
+    private float angleInDegrees = 0.0f;
+    
 	public GLES20SurfaceView(Context context) {
 		super(context);
 		// TODO Auto-generated constructor stub
@@ -277,9 +279,29 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	
 		// Draw the triangle facing straight on.
         Matrix.setIdentityM(mModelMatrix, 0);
-        //Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
-        triangleTest.drawTriangle(triangleTest.getmTriangle1Vertices(), mPositionHandle, mColorHandle, mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+        triangleTest.drawTriangle(triangleTest.getmTriangle1Vertices(), mPositionHandle, mColorHandle, 
+        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
 	
+        
+        // Draw one translated a bit down and rotated to be flat on the ground.
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, -1.0f, 0.0f);
+        Matrix.rotateM(mModelMatrix, 0, 90.0f, 1.0f, 0.0f, 0.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);        
+        triangleTest.drawTriangle(triangleTest.getmTriangle2Vertices(), mPositionHandle, mColorHandle, 
+        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+    	
+        // Draw one translated a bit to the right and rotated to be facing to the left.
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 1.0f, 0.0f, 0.0f);
+        Matrix.rotateM(mModelMatrix, 0, 90.0f, 0.0f, 1.0f, 0.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+        triangleTest.drawTriangle(triangleTest.getmTriangle3Vertices(), mPositionHandle, mColorHandle, 
+        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+    	
+        angleInDegrees++;
+        angleInDegrees = angleInDegrees % 360;
 	}
 	
 }
