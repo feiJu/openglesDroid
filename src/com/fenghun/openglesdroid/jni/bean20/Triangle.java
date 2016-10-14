@@ -6,6 +6,8 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
+
 import android.opengl.GLES20;
 import android.util.Log;
 
@@ -18,6 +20,27 @@ public class Triangle {
 
 	private static String TAG = "Triangle";
 
+	
+	/**
+	 * OpenGL ES 2.0 中，在有效的顶点着色器和片段着色器被装载前，什么渲染都做不了。
+	 * 我们介绍管线时介绍了顶点着色器和片段着色器，做任何渲染前，必须有顶点和片段着色器。
+	 */
+	// 顶点着色器，
+	private final String vertexShaderCode = "attribute vec4 vPosition;" // 输入属性，4个成员矢量的vPosition
+			+ "void main() {" // 主函数声明着色器宣布着色器开始执行
+			+ "  gl_Position = vPosition;" + "}";
+
+	// 片段着色器
+	private final String fragmentShaderCode = "precision mediump float;" // 声明着色器默认的浮点变量精度
+			+ "uniform vec4 vColor;"
+			+ "void main() {"
+			+ "  gl_FragColor = vColor;" // gl_FragColor是片段着色器最终的输出值
+			+ "}";
+
+	private int vertexShader;
+	
+	private int fragmentShader;
+	
 	private FloatBuffer vertexBuffer;
 
 	// 数组中每个顶点的坐标数
@@ -25,22 +48,23 @@ public class Triangle {
 
 	private final int vertexStride = COORDS_PER_VERTEX * 4;
 
-//	static float triangleCoords[] = { // 按逆时针方向顺序:
-//			0.0f, 0.622008459f, 0.0f, // top
-//			-0.5f, -0.311004243f, 0.0f, // bottom left
-//			0.5f, -0.311004243f, 0.0f, // bottom right
-//			
-//			0.1f, 0.622008459f, 0.0f, // top
-//			0.6f, 0.0f, 0.0f, // bottom left
-//			1.0f, 0.622008459f, 0.0f // bottom left
-//	};
-	
-	
 	static float triangleCoords[] = { // 按逆时针方向顺序:
-		0.0f, 0.5f, 0.0f, // top
-		-0.5f, 0.0f, 0.0f, // bottom left
-		0.5f, 0.0f, 0.0f, // bottom right
+			0.0f, 0.622008459f, 0.0f, // top
+			-0.5f, -0.311004243f, 0.0f, // bottom left
+			0.5f, -0.311004243f, 0.0f, // bottom right
+			
+			0.1f, 0.622008459f, 0.0f, // top
+			0.6f, 0.0f, 0.0f, // bottom left
+			1.0f, 0.622008459f, 0.0f // bottom left
 	};
+	
+	
+//	static float triangleCoords[] = { // 按逆时针方向顺序:
+//		-0.5f, 0.5f, 0.0f, // top
+//		-0.5f, -0.5f, 0.0f, // bottom left
+//		0.5f, 0.5f, 0.0f, // bottom right
+//		
+//	};
 	
 
 	// 设置颜色，分别为red, green, blue 和alpha (opacity)
@@ -60,6 +84,12 @@ public class Triangle {
 		vertexBuffer.put(triangleCoords);
 		// 设置buffer，从第一个坐标开始读
 		vertexBuffer.position(0);
+		
+		
+		setVertexShader(GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER,
+				vertexShaderCode)); // 加载顶点着色器
+		setFragmentShader(GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER,
+				fragmentShaderCode)); // 加载片段着色器
 
 	}
 
@@ -113,5 +143,21 @@ public class Triangle {
 		GLES20.glFinish();
 		// 重置当前的模型观察矩阵
 		// GLES20.glLoadIdentity();
+	}
+
+	public int getVertexShader() {
+		return vertexShader;
+	}
+
+	public void setVertexShader(int vertexShader) {
+		this.vertexShader = vertexShader;
+	}
+
+	public int getFragmentShader() {
+		return fragmentShader;
+	}
+
+	public void setFragmentShader(int fragmentShader) {
+		this.fragmentShader = fragmentShader;
 	}
 }

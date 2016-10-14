@@ -175,7 +175,7 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// Replace the current matrix with the identity matrix
 		// 因为每次调用onDrawFrame 时，glTranslatef(0, 0, -4)每次都再向后移动4个单位，
 		// 正方形迅速后移直至看不见,需要加上重置Matrix的代码。
-		//gl.glLoadIdentity();// 重置当前的模型观察矩阵，即将当前矩阵设为单位矩阵
+		gl.glLoadIdentity();// 重置当前的模型观察矩阵，即将当前矩阵设为单位矩阵
 
 		// Translates 4 units into the screen.
 		// OpenGL ES从当前位置开始渲染，缺省坐标为(0,0,0)，和View port 的坐标一样，
@@ -194,13 +194,13 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		//initSphereScene(gl);
 		//base3DGraphics.drawSphere(gl);	// 绘制球体
 
-		base3DGraphics.initTestLightScene(gl);	// 光源和材质反光特性
-		base3DGraphics.drawMaterialSphere(gl,true);
+		//base3DGraphics.initTestLightScene(gl);	// 光源和材质反光特性
+		//base3DGraphics.drawMaterialSphere(gl,true);
 		
 		
 		
 		// 绘制正方形
-		// drawTestRects(gl);
+		 drawTestRects(gl);
 
 		// 绘制旋转的立方体
 		// if(cube != null) drawCube(gl);
