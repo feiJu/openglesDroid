@@ -5,6 +5,7 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.bean20.Cube;
 import com.fenghun.openglesdroid.jni.bean20.Point;
 import com.fenghun.openglesdroid.jni.bean20.Square;
@@ -46,6 +47,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 	private static String TAG = "GLES20SurfaceView";
 
+	private Context context;
+	
 	//private Triangle mTriangle;
 
 	//private Square square;
@@ -70,6 +73,12 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	
 	/** This will be used to pass in model normal information. */
 	private int mNormalHandle;
+	
+	/** This will be used to pass in the texture. */
+	private int mTextureUniformHandle;
+	
+	/** This will be used to pass in model texture coordinate information. */
+	private int mTextureCoordinateHandle;
 	
 	/** 
 	 * Stores a copy of the model matrix specifically for the light position.
@@ -103,6 +112,10 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 	private int mColorHandle;
 	
+	//private int mProgramHandle;
+	
+	private int mTextureDataHandle;
+	
 	/** Store the projection matrix. This is used to project the scene onto a 2D viewport.
 	 * 透视投影矩阵，用于投影场景到屏幕
 	 *
@@ -121,12 +134,14 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
     
 	public GLES20SurfaceView(Context context) {
 		super(context);
+		this.context = context;
 		// TODO Auto-generated constructor stub
 		init();
 	}
 
 	public GLES20SurfaceView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.context = context;
 		init();
 	}
 
@@ -204,8 +219,13 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);
 	    
 	    mPerVertexProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle, 
-	    		new String[] {"a_Position", "a_Color", "a_Normal"}); 
+	    		new String[] {"a_Position", "a_Color", "a_Normal", "a_TexCoordinate"}); 
 		
+//	    mProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle,
+//	            new String[] {"a_Position",  "a_Color", "a_Normal", "a_TexCoordinate"});
+	    
+	    // Load the texture
+	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.ic_launcher);
 	    
 	    if(point == null){	// 如果不用绘制点
 	    	/**
@@ -326,9 +346,20 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVPMatrix");
         mMVMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVMatrix"); 
         mLightPosHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_LightPos");
+        mTextureUniformHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_Texture");
+        
         mPositionHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Position");
         mColorHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Color");
-        mNormalHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Normal"); 
+        mNormalHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Normal");   
+        mTextureCoordinateHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_TexCoordinate");
+        
+        
+        // Set the active texture unit to texture unit 0.
+	    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+	    // Bind the texture to this unit.
+	    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle);
+	    // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+	    GLES20.glUniform1i(mTextureUniformHandle, 0);
         
         /**
          * 光源实现的效果为在，以Z=-5为轴，半径为2个单位旋转
@@ -358,7 +389,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 0.0f); // 模型绕X轴旋转
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
-				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
                         
 		/**
 		 * 绘制以自身Y方向为轴旋转的立方体，位置在X轴负方向4个单位处，Z轴负方向7个单位处
@@ -368,7 +399,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);        
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
-				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
         /**
          * 绘制以自身Z方向为轴旋转的立方体，位置在Y轴正向4个单位处，Z轴负方向7个单位处      
          */
@@ -377,7 +408,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);        
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
-				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
 
 		/**
 		 * 绘制位置在Y轴负方向4个单位处，Z轴负方向7个单位处的立方体
@@ -386,7 +417,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         Matrix.translateM(mModelMatrix, 0, 0.0f, -4.0f, -7.0f);
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
-				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
 
 		/**
 		 * 以X=Y为轴，绕自身旋转，位置在Z轴负方向5个单位处的立方体
@@ -396,14 +427,14 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 1.0f, 0.0f);        
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
-				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
 
 		// 绘制点表示光源
         // Draw a point to indicate the light.
         GLES20.glUseProgram(mPointProgramHandle);        
 		point.drawLight(cube.getmMVPMatrix(),mLightModelMatrix, mProjectionMatrix,
 				mPointProgramHandle, mLightPosInModelSpace, mViewMatrix);
-
+		
 	}
 	
 	
@@ -456,8 +487,5 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         angleInDegrees++;
         angleInDegrees = angleInDegrees % 360;
 	}
-
-	
-	
 	
 }

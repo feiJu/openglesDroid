@@ -24,6 +24,7 @@ public class Cube {
 	private final FloatBuffer mCubePositions;	// 位置信息
 	private final FloatBuffer mCubeColors;	// 颜色信息
 	private final FloatBuffer mCubeNormals;	// 法线信息
+	private final FloatBuffer mCubeTextureCoordinates;	// 贴图信息
 	
 	/** Allocate storage for the final combined matrix. This will be passed into the shader program. */
 	private float[] mMVPMatrix = new float[16];
@@ -40,6 +41,9 @@ public class Cube {
 	
 	/** Size of the normal data in elements. */
 	private final int mNormalDataSize = 3;
+	
+	/** Size of the texture coordinate data in elements. */
+	private final int mTextureCoordinateDataSize = 2;
 	
 	public Cube() {
 		// TODO Auto-generated constructor stub
@@ -155,6 +159,9 @@ public class Cube {
 						1.0f, 0.0f, 1.0f, 1.0f
 				};
 				
+				
+				
+				
 				// X, Y, Z
 				// The normal is used in light calculations and is a vector which points
 				// orthogonal to the plane of the surface. For a cube model, the normals
@@ -209,19 +216,82 @@ public class Cube {
 						0.0f, -1.0f, 0.0f,
 						0.0f, -1.0f, 0.0f
 				};
+
+				// S, T (or X, Y)
+				// Texture coordinate data.
+				// Because images have a Y axis pointing downward (values increase as you move down the image) while
+				// OpenGL has a Y axis pointing upward, we adjust for that here by flipping the Y axis.
+				// What's more is that the texture coordinates are the same for every face.
+				final float[] cubeTextureCoordinateData =
+				{												
+						// Front face
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,				
+						
+						// Right face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Back face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Left face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Top face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Bottom face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f
+		};
 				
-				// Initialize the buffers.
-				mCubePositions = ByteBuffer.allocateDirect(cubePositionData.length * mBytesPerFloat)
-		        .order(ByteOrder.nativeOrder()).asFloatBuffer();							
-				mCubePositions.put(cubePositionData).position(0);		
-				
-				mCubeColors = ByteBuffer.allocateDirect(cubeColorData.length * mBytesPerFloat)
-		        .order(ByteOrder.nativeOrder()).asFloatBuffer();							
-				mCubeColors.put(cubeColorData).position(0);
-				
-				mCubeNormals = ByteBuffer.allocateDirect(cubeNormalData.length * mBytesPerFloat)
-		        .order(ByteOrder.nativeOrder()).asFloatBuffer();							
-				mCubeNormals.put(cubeNormalData).position(0);
+		// Initialize the buffers.
+		mCubePositions = ByteBuffer
+				.allocateDirect(cubePositionData.length * mBytesPerFloat)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mCubePositions.put(cubePositionData).position(0);
+
+		mCubeColors = ByteBuffer
+				.allocateDirect(cubeColorData.length * mBytesPerFloat)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mCubeColors.put(cubeColorData).position(0);
+
+		mCubeNormals = ByteBuffer
+				.allocateDirect(cubeNormalData.length * mBytesPerFloat)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mCubeNormals.put(cubeNormalData).position(0);
+		
+		mCubeTextureCoordinates = ByteBuffer.allocateDirect(cubeTextureCoordinateData.length * mBytesPerFloat)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mCubeTextureCoordinates.put(cubeTextureCoordinateData).position(0);
 	}
 	
 	/**
@@ -297,30 +367,34 @@ public class Cube {
 	public String getVertexShader_lightPerFragment(){
 		
 		final String vertexShader =
-		"uniform mat4 u_MVPMatrix;	\n"      // A constant representing the combined model/view/projection matrix.
-		+ "uniform mat4 u_MVMatrix;	\n"       // A constant representing the combined model/view matrix.
+		"uniform mat4 u_MVPMatrix;		\n"      // A constant representing the combined model/view/projection matrix.
+		+ "uniform mat4 u_MVMatrix;		\n"       // A constant representing the combined model/view matrix.
 		 
-		+"attribute vec4 a_Position;\n"     // Per-vertex position information we will pass in.
-		+"attribute vec4 a_Color;  \n"      // Per-vertex color information we will pass in.
-		+"attribute vec3 a_Normal;  \n"     // Per-vertex normal information we will pass in.
+		+"attribute vec4 a_Position;	\n"     // Per-vertex position information we will pass in.
+		+"attribute vec4 a_Color;  		\n"      // Per-vertex color information we will pass in.
+		+"attribute vec3 a_Normal;  	\n"     // Per-vertex normal information we will pass in.
 		 
-		+"varying vec3 v_Position; \n"      // This will be passed into the fragment shader.
-		+"varying vec4 v_Color;     \n"     // This will be passed into the fragment shader.
-		+"varying vec3 v_Normal;    \n"     // This will be passed into the fragment shader.
-		 
+		+"varying vec3 v_Position; 		\n"      // This will be passed into the fragment shader.
+		+"varying vec4 v_Color;     	\n"     // This will be passed into the fragment shader.
+		+"varying vec3 v_Normal;    	\n"     // This will be passed into the fragment shader.
+		+"attribute vec2 a_TexCoordinate;	\n"	 // Per-vertex texture coordinate information we will pass in. 
+		+"varying vec2 v_TexCoordinate;   	\n"	// This will be passed into the fragment shader.
 		
 		+"void main(){ \n"	// The entry point for our vertex shader.
-		+"    v_Position = vec3(u_MVMatrix * a_Position); 	\n" // Transform the vertex into eye space.
+		+"    v_Position = vec3(u_MVMatrix * a_Position); 			\n" // Transform the vertex into eye space.
 		+"    v_Color = a_Color; 	\n" // Pass through the color.
 		+"    v_Normal = vec3(u_MVMatrix * vec4(a_Normal, 0.0)); 	\n"// Transform the normal's orientation into eye space.
 		    // gl_Position is a special variable used to store the final position.
 		    // Multiply the vertex by the matrix to get the final point in normalized screen coordinates.
-		+"    gl_Position = u_MVPMatrix * a_Position; 	\n"
+		+"    gl_Position = u_MVPMatrix * a_Position; 				\n"
+		+"	  v_TexCoordinate = a_TexCoordinate;					\n" // Pass through the texture coordinate.
 		+"}";
 		return vertexShader;
 	}
 	
 	/**
+	 * 参考链接：http://www.learnopengles.com/android-lesson-three-moving-to-per-fragment-lighting/
+	 * 
 	 * 光照效果在片段着色器中完成，作用于每个片段
 	 * @return
 	 */
@@ -329,11 +403,14 @@ public class Cube {
 		"precision mediump float;     	\n"   // Set the default precision to medium. We don't need as high of a
 		        // precision in the fragment shader.
 		+"uniform vec3 u_LightPos;    	\n"       // The position of the light in eye space.
+		+"uniform sampler2D u_Texture;  \n"  // The input texture.
+		
 		
 		+"varying vec3 v_Position;    	\n"     // Interpolated position for this fragment.
 		+"varying vec4 v_Color;       	\n"       // This is the color from the vertex shader interpolated across the
 		        // triangle per fragment.
 		+"varying vec3 v_Normal;      	\n"   // Interpolated normal for this fragment.
+		+"varying vec2 v_TexCoordinate; \n"  // Interpolated texture coordinate per fragment.
 		
 		//The entry point for our fragment shader.
 		+"void main() {   				\n"
@@ -347,11 +424,21 @@ public class Cube {
 			// pointing in the same direction then it will get max illumination.
 		+"	float diffuse = max(dot(v_Normal, lightVector), 0.1);    			\n"
 			
-			// Add attenuation.
-		+"	diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));    \n"
+//			// Add attenuation.
+//		+"	diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));    \n"
+		
+		// Add attenuation.
+		+"diffuse = diffuse * (1.0 / (1.0 + (0.10 * distance)));				 \n"
 			
-			// Multiply the color by the diffuse illumination level to get final output color.
-		+"	gl_FragColor = v_Color * diffuse;    								\n"
+		// Add ambient lighting
+		+"diffuse = diffuse + 0.3;												 \n"
+			
+//		// Multiply the color by the diffuse illumination level to get final output color.
+//		+"	gl_FragColor = v_Color * diffuse;    								\n"
+		
+		// Multiply the color by the diffuse illumination level and texture value to get final output color.
+		+"gl_FragColor = (v_Color * diffuse * texture2D(u_Texture, v_TexCoordinate));	\n"
+		
 		+"}    \n";
 		return fragmentShader;
 	}
@@ -361,7 +448,7 @@ public class Cube {
 			int mNormalHandle, float[] mViewMatrix, float[] mModelMatrix,
 			int mMVMatrixHandle, float[] mProjectionMatrix,
 			int mMVPMatrixHandle, int mLightPosHandle,
-			float[] mLightPosInEyeSpace) {
+			float[] mLightPosInEyeSpace,int mTextureCoordinateHandle) {
 		// TODO Auto-generated method stub
 		
 		// Pass in the position information
@@ -384,6 +471,13 @@ public class Cube {
 				GLES20.GL_FLOAT, false, 0, mCubeNormals);	// 传入法线信息
 
 		GLES20.glEnableVertexAttribArray(mNormalHandle);
+		
+		// Pass in the texture coordinate information
+        mCubeTextureCoordinates.position(0);
+        GLES20.glVertexAttribPointer(mTextureCoordinateHandle, mTextureCoordinateDataSize, GLES20.GL_FLOAT, false, 
+        		0, mCubeTextureCoordinates);
+        GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);	// 传入贴图信息
+		
 
 		// This multiplies the view matrix by the model matrix, and stores the
 		// result in the MVP matrix
