@@ -239,20 +239,26 @@ public class Cube {
 		  
 		  + "void main()                    \n" 	// The entry point for our vertex shader.
 		  + "{                              \n"		
-		// Transform the vertex into eye space.
+		// Transform the vertex into eye space.modelView顶点
 		  + "   vec3 modelViewVertex = vec3(u_MVMatrix * a_Position);              \n"
-		// Transform the normal's orientation into eye space.
+		// Transform the normal's orientation into eye space.法线
 		  + "   vec3 modelViewNormal = vec3(u_MVMatrix * vec4(a_Normal, 0.0));     \n"
-		// Will be used for attenuation.
+		// Will be used for attenuation.光源到顶点距离，用于计算能量衰减
 		  + "   float distance = length(u_LightPos - modelViewVertex);             \n"
-		// Get a lighting direction vector from the light to the vertex.
+		// Get a lighting direction vector from the light to the vertex.光线矢量
 		  + "   vec3 lightVector = normalize(u_LightPos - modelViewVertex);        \n"
-		// Calculate the dot product of the light vector and vertex normal. If the normal and light vector are
+		// Calculate the dot product of the light vector and vertex normal. 
+		// (计算光矢量和顶点法线的点积)
+		//If the normal and light vector are
 		// pointing in the same direction then it will get max illumination.
+		// 获取最大的光能量值，如果法线和光矢量方向相同，则能获取最大的光照强度
 		  + "   float diffuse = max(dot(modelViewNormal, lightVector), 0.1);       \n" 	  		  													  
 		// Attenuate the light based on distance.
+		// 计算漫发射的值，光强随着距离的增大而衰减
 		  + "   diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));  \n"
 		// Multiply the color by the illumination level. It will be interpolated across the triangle.
+		// 计算漫反射产生的光照对颜色的影响，不同的光照强度对物体的颜色产生不同的影响，取决于光强和物体本身的反光属性
+		// 计算结果输出给片段着色器
 		  + "   v_Color = a_Color * diffuse;                                       \n" 	 
 		// gl_Position is a special variable used to store the final position.
 		// Multiply the vertex by the matrix to get the final point in normalized screen coordinates.		
