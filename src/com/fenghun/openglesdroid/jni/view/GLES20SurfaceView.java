@@ -5,6 +5,8 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.jni.bean20.Cube;
+import com.fenghun.openglesdroid.jni.bean20.Point;
 import com.fenghun.openglesdroid.jni.bean20.Square;
 import com.fenghun.openglesdroid.jni.bean20.Triangle;
 import com.fenghun.openglesdroid.jni.bean20.TriangleTest;
@@ -15,6 +17,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
 
@@ -47,44 +50,52 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 	//private Square square;
 	
-	private TriangleTest triangleTest;
+	//private TriangleTest triangleTest;
 	
-	 /**
+	private Cube cube;
+	
+	private Point point;
+	
+	/** This is a handle to our per-vertex cube shading program. */
+	private int mPerVertexProgramHandle;
+	
+	/** This is a handle to our light point program. */
+	private int mPointProgramHandle; 
+	
+	/** This will be used to pass in the modelview matrix. */
+	private int mMVMatrixHandle;
+	
+	/** This will be used to pass in the light position. */
+	private int mLightPosHandle;
+	
+	/** This will be used to pass in model normal information. */
+	private int mNormalHandle;
+	
+	/** 
+	 * Stores a copy of the model matrix specifically for the light position.
+	 */
+	private float[] mLightModelMatrix = new float[16]; 
+	
+	/** Used to hold the current position of the light in world space (after transformation via model matrix). */
+	private final float[] mLightPosInWorldSpace = new float[4];
+	
+	/** Used to hold a light centered on the origin in model space. We need a 4th coordinate so we can get translations to work when
+	 *  we multiply this by our transformation matrices. */
+	private final float[] mLightPosInModelSpace = new float[] {0.0f, 0.0f, 0.0f, 1.0f};
+	
+	/** Used to hold the transformed position of the light in eye space (after transformation via modelview matrix) */
+	private final float[] mLightPosInEyeSpace = new float[4];
+	
+	/**
 	 * Store the view matrix. This can be thought of as our camera. 
 	 * This matrix transforms world space to eye space;
 	 * it positions things relative to our eye.
 	 */
 	private float[] mViewMatrix = new float[16];
 	
-	final String vertexShader =
-		    "uniform mat4 u_MVPMatrix;      \n"     // A constant representing the combined model/view/projection matrix.
-		 
-		  + "attribute vec4 a_Position;     \n"     // Per-vertex position information we will pass in.
-		  + "attribute vec4 a_Color;        \n"     // Per-vertex color information we will pass in.
-		 
-		  + "varying vec4 v_Color;          \n"     // This will be passed into the fragment shader. 
-		  											// 顶点着色器的输出变量，供片段着色器使用，必须保证与片段着色器定义相同
-		 
-		  + "void main()                    \n"     // The entry point for our vertex shader.
-		  + "{                              \n"
-		  + "   v_Color = a_Color;          \n"     // Pass the color through to the fragment shader.
-		                                            // It will be interpolated across the triangle.
-		  + "   gl_Position = u_MVPMatrix   \n"     // gl_Position is a special variable used to store the final position.
-		  + "               * a_Position;   \n"     // Multiply the vertex by the matrix to get the final point in
-		  + "}                              \n";    // normalized screen coordinates.矢量和矩阵相乘获取最终的归一化屏幕坐标系中的点
-	
-	final String fragmentShader =
-		    "precision mediump float;       \n"     // Set the default precision to medium. We don't need as high of a
-		                                            // precision in the fragment shader.
-		  + "varying vec4 v_Color;          \n"     // This is the color from the vertex shader interpolated across the
-		                                            // triangle per fragment.接收顶点着色器的输入变量，与顶点着色器相对应
-		  + "void main()                    \n"     // The entry point for our fragment shader.
-		  + "{                              \n"
-		  + "   gl_FragColor = v_Color;     \n"     // Pass the color directly through the pipeline. 直接将颜色输入给管道
-		  + "}                              \n";
-	
-	
 	private int mProgram;
+	
+	
 
 	private int mMVPMatrixHandle;
 	
@@ -139,6 +150,12 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// 设置背景的颜色
 		GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
+		// Use culling to remove back faces.
+		GLES20.glEnable(GLES20.GL_CULL_FACE);
+
+		// Enable depth testing
+		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+		
 		// Position the eye behind the origin.
 	    final float eyeX = 0.0f;
 	    final float eyeY = 0.0f;
@@ -170,66 +187,88 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 //		int fragmentShader = square.getFragmentShader();
 		
 	    // 
-	    triangleTest = new TriangleTest();
+//	    triangleTest = new TriangleTest();
+//	    String vertexShader = triangleTest.getVertexShader();
+//	    String fragmentShader = triangleTest.getFragmentShader();
+	    
+	    // 初始化一个立方体
+	    cube = new Cube();
+	    String vertexShader = cube.getVertexShader();
+	    String fragmentShader = cube.getFragmentShader();
+	    point = new Point();	// 点光源
 	    
 	    int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);
 
 	    int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);
+	    
+	    mPerVertexProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle, 
+	    		new String[] {"a_Position", "a_Color", "a_Normal"}); 
 		
-		/**
-		 * 一旦应用程序已经创建了顶点、片段着色器对象，它需要去创建项目对象，项目是最终的链接对象，
-		 * 每个着色器在被绘制前都应该联系到项目或者项目对象。
-		 * 
-		 * 源码输入着色器对象，着色器对象被编辑为目标格式（.obj 文件）。完成后着色器对象能够链接到项目对象上，一个项目可以有多个着色器
-		 * 
-		 * OpenGL ES 中一个项目中有一个顶点着色器和一个片段着色器（不能多不能少），然后链接成可执行文件，最后能用来渲染。
-		 * 
-		 */
-		mProgram = GLES20.glCreateProgram(); // 创建一个空的OpenGL ES Program
+	    
+	    if(point == null){	// 如果不用绘制点
+	    	/**
+			 * 一旦应用程序已经创建了顶点、片段着色器对象，它需要去创建项目对象，项目是最终的链接对象，
+			 * 每个着色器在被绘制前都应该联系到项目或者项目对象。
+			 * 
+			 * 源码输入着色器对象，着色器对象被编辑为目标格式（.obj 文件）。完成后着色器对象能够链接到项目对象上，一个项目可以有多个着色器
+			 * 
+			 * OpenGL ES 中一个项目中有一个顶点着色器和一个片段着色器（不能多不能少），然后链接成可执行文件，最后能用来渲染。
+			 * 
+			 */
+			mProgram = GLES20.glCreateProgram(); // 创建一个空的OpenGL ES Program
 
-		GLES20.glAttachShader(mProgram, vertexShaderHandle); // 将顶点着色器添加到program
-		GLES20.glAttachShader(mProgram, fragmentShaderHandle); // 将片段着色器添加到program
+			GLES20.glAttachShader(mProgram, vertexShaderHandle); // 将顶点着色器添加到program
+			GLES20.glAttachShader(mProgram, fragmentShaderHandle); // 将片段着色器添加到program
 
-		GLES20.glLinkProgram(mProgram); // 链接项目
-		// 检查项目链接错误
-		int[] linkStatus = new int[1];
-		GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
-		if (linkStatus[0] != GLES20.GL_TRUE) {
-			Log.e(TAG, "Could not link program: ");
-			Log.e(TAG, GLES20.glGetProgramInfoLog(mProgram));
-			GLES20.glDeleteProgram(mProgram);
-			mProgram = 0;
-		}
-		
-		/**
-		 * 两个着色器被链接后，下一步应用设定顶点着色器 vPosition 属性
-		 * // Bind vPosition to attribute 0
-		 * glBindAttribLocation(programObject, 0, "vPosition");
-		 * glBindAttribLocation 函数绑定 vPosition 属性到顶点着色器位置 0，当我们指定顶点数据后，位置指针指向下一个位置。
-		 */
-		
-		
-		 // Set program handles. These will later be used to pass in values to the program.
-	    mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
-	    if (mMVPMatrixHandle == -1) {
-			throw new RuntimeException(
-					"Could not get attrib location for mMVPMatrixHandle");
-		}
-	  
-		// 获取指向vertex shader的成员vPosition的 handle,（这里直接获取的返回值为glBindAttribLocation中的第二个参数,
-		//并完成glBindAttribLocation操作） 
-		mPositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
-		if (mPositionHandle == -1) {
-			throw new RuntimeException(
-					"Could not get attrib location for a_Position");
-		}
+			GLES20.glLinkProgram(mProgram); // 链接项目
+			// 检查项目链接错误
+			int[] linkStatus = new int[1];
+			GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
+			if (linkStatus[0] != GLES20.GL_TRUE) {
+				Log.e(TAG, "Could not link program: ");
+				Log.e(TAG, GLES20.glGetProgramInfoLog(mProgram));
+				GLES20.glDeleteProgram(mProgram);
+				mProgram = 0;
+			}
+			
+			/**
+			 * 两个着色器被链接后，下一步应用设定顶点着色器 vPosition 属性
+			 * // Bind vPosition to attribute 0
+			 * glBindAttribLocation(programObject, 0, "vPosition");
+			 * glBindAttribLocation 函数绑定 vPosition 属性到顶点着色器位置 0，当我们指定顶点数据后，位置指针指向下一个位置。
+			 */
+			
+			 // Set program handles. These will later be used to pass in values to the program.
+		    mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
+		    if (mMVPMatrixHandle == -1) {
+				throw new RuntimeException(
+						"Could not get attrib location for mMVPMatrixHandle");
+			}
+		  
+			// 获取指向vertex shader的成员vPosition的 handle,（这里直接获取的返回值为glBindAttribLocation中的第二个参数,
+			//并完成glBindAttribLocation操作） 
+			mPositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
+			if (mPositionHandle == -1) {
+				throw new RuntimeException(
+						"Could not get attrib location for a_Position");
+			}
 
-		// 获取指向fragment shader的成员vColor的handle
-		mColorHandle = GLES20.glGetAttribLocation(mProgram, "a_Color");
-		if (mColorHandle == -1) {
-			throw new RuntimeException(
-					"Could not get attrib location for a_Color");
+			// 获取指向fragment shader的成员vColor的handle
+			mColorHandle = GLES20.glGetAttribLocation(mProgram, "a_Color");
+			if (mColorHandle == -1) {
+				throw new RuntimeException(
+						"Could not get attrib location for a_Color");
+			}
+	    }else{
+			final int pointVertexShaderHandle = GLES20Utils.loadShader(
+					GLES20.GL_VERTEX_SHADER, point.getPointVertexShader());
+			final int pointFragmentShaderHandle = GLES20Utils.loadShader(
+					GLES20.GL_FRAGMENT_SHADER, point.getPointFragmentShader());
+			mPointProgramHandle = GLES20Utils.createAndLinkProgram(
+					pointVertexShaderHandle, pointFragmentShaderHandle,
+					new String[] { "a_Position" });
 		}
+		
 	}
 
 	@Override
@@ -253,7 +292,6 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    final float far = 10.0f;
 	 
 	    Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
-		
 	}
 
 	@Override
@@ -262,6 +300,119 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// MyOpenglES.onDrawFrame();
 		// 重绘背景色
 		//GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+		//testTriangles(triangleTest);	
+		testCubes(cube);
+	}
+	
+	/**
+	 * 测试绘制立方体
+	 * 
+	 * @param cube
+	 */
+	private void testCubes(Cube cube){
+		
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);			        
+        
+        // Do a complete rotation every 10 seconds.
+        long time = SystemClock.uptimeMillis() % 10000L;        
+        float angleInDegrees = (360.0f / 10000.0f) * ((int) time);                
+        
+        // Set our per-vertex lighting program.
+        GLES20.glUseProgram(mPerVertexProgramHandle);
+        
+        // Set program handles for cube drawing.
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVPMatrix");
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVMatrix"); 
+        mLightPosHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_LightPos");
+        mPositionHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Position");
+        mColorHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Color");
+        mNormalHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Normal"); 
+        
+        /**
+         * 光源实现的效果为在，以Z=-5为轴，半径为2个单位旋转
+         * 实现步骤（旋转平移操作的代码步骤与矩阵相乘的计算顺序相反，矩阵相乘左乘）：
+         * 1. 先将光源向z轴的正方向平移2个单位
+         * 2. 再让光源绕Y轴旋转
+         * 3. 再将光源向Z轴的负方向平移5个单位（相当于把旋转轴平移了5个单位）
+         */
+        // Calculate position of the light. Rotate and then push into the distance.
+        Matrix.setIdentityM(mLightModelMatrix, 0);	// 初始化光照模型矩阵为单位矩阵
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, -5.0f);   // 向z轴的负方向平移5个单位   
+        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转,旋转半径为2个单位
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 2.0f);	// 再向z轴正方向平移2个单位
+        
+        /**
+         * 模型自身的坐标系==》世界坐标系==》二维屏幕的3d坐标系
+         */
+        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);//模型坐标转为世界坐标
+        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);  	// 世界坐标转为屏幕3D坐标
+        
+        // Draw some cubes.   
+        /**
+         * 绘制以自身X方向为轴旋转的立方体，位置在X轴正向4个单位处，Z轴负方向7个单位处
+         */
+        Matrix.setIdentityM(mModelMatrix, 0);	// 初始化立方体模型矩阵为单位矩阵
+        Matrix.translateM(mModelMatrix, 0, 4.0f, 0.0f, -7.0f);	// 模型向X轴正方向平移4个单位，向Z轴负方向平移7个单位
+		Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 0.0f); // 模型绕X轴旋转
+		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+                        
+		/**
+		 * 绘制以自身Y方向为轴旋转的立方体，位置在X轴负方向4个单位处，Z轴负方向7个单位处
+		 */
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, -4.0f, 0.0f, -7.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);        
+		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+        /**
+         * 绘制以自身Z方向为轴旋转的立方体，位置在Y轴正向4个单位处，Z轴负方向7个单位处      
+         */
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 4.0f, -7.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);        
+		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+
+		/**
+		 * 绘制位置在Y轴负方向4个单位处，Z轴负方向7个单位处的立方体
+		 */
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, -4.0f, -7.0f);
+		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+
+		/**
+		 * 以X=Y为轴，绕自身旋转，位置在Z轴负方向5个单位处的立方体
+		 */
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5.0f);
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 1.0f, 0.0f);        
+		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace);
+
+		// 绘制点表示光源
+        // Draw a point to indicate the light.
+        GLES20.glUseProgram(mPointProgramHandle);        
+		point.drawLight(cube.getmMVPMatrix(),mLightModelMatrix, mProjectionMatrix,
+				mPointProgramHandle, mLightPosInModelSpace, mViewMatrix);
+
+	}
+	
+	
+	
+	/**
+	 * 
+	 * 测试时绘制三角形
+	 * 
+	 * @param triangleTest
+	 */
+	private void testTriangles(TriangleTest triangleTest){
 		/**
 		 * OpenGL ES 内部存放图形数据的Buffer有COLOR ,DEPTH (深度信息）等， 在绘制图形之前一般需要清空COLOR 和
 		 * DEPTH Buffer。
@@ -303,5 +454,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         angleInDegrees++;
         angleInDegrees = angleInDegrees % 360;
 	}
+
+	
+	
 	
 }

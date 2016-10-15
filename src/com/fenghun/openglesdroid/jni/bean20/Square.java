@@ -155,6 +155,7 @@ public class Square {
 	    GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
 	    // 画正方形，这里绘制出来的正方形不规则，待解决。。。
+	    // 有关不规则的问题：是opengl的绘制坐标系与屏幕的坐标系不成比例造成的正方形变形。
 	    //GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
 	    GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 	    
