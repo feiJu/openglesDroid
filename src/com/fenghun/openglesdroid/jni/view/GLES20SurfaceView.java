@@ -193,8 +193,10 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    
 	    // 初始化一个立方体
 	    cube = new Cube();
-	    String vertexShader = cube.getVertexShader();
-	    String fragmentShader = cube.getFragmentShader();
+//	    String vertexShader = cube.getVertexShader();
+//	    String fragmentShader = cube.getFragmentShader();
+	    String vertexShader = cube.getVertexShader_lightPerFragment();
+	    String fragmentShader = cube.getFragmentShader_lightPerFragment();
 	    point = new Point();	// 点光源
 	    
 	    int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);
