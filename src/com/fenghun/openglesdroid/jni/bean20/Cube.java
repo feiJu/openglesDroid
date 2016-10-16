@@ -4,6 +4,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import com.fenghun.openglesdroid.R;
+import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
+
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
@@ -17,7 +21,7 @@ import android.opengl.Matrix;
  */
 public class Cube {
 
-	 
+	private Context context;
 	
 	
 	/** Store our model data in a float buffer. */
@@ -45,18 +49,17 @@ public class Cube {
 	/** Size of the texture coordinate data in elements. */
 	private final int mTextureCoordinateDataSize = 2;
 	
-	public Cube() {
+	public Cube(Context context) {
 		// TODO Auto-generated constructor stub
-		
+		this.context = context;
 		// Define points for a cube.		
-		
-				// X, Y, Z
-				final float[] cubePositionData =
-				{
-						// In OpenGL counter-clockwise winding is default. This means that when we look at a triangle, 
-						// if the points are counter-clockwise we are looking at the "front". If not we are looking at
-						// the back. OpenGL has an optimization where all back-facing triangles are culled, since they
-						// usually represent the backside of an object and aren't visible anyways.
+
+		// X, Y, Z
+		final float[] cubePositionData = {
+		// In OpenGL counter-clockwise winding is default. This means that when we look at a triangle, 
+		// if the points are counter-clockwise we are looking at the "front". If not we are looking at
+		// the back. OpenGL has an optimization where all back-facing triangles are culled, since they
+		// usually represent the backside of an object and aren't visible anyways.
 						
 						// Front face
 						-1.0f, 1.0f, 1.0f,				
@@ -107,8 +110,8 @@ public class Cube {
 						-1.0f, -1.0f, -1.0f,
 				};	
 				
-				// R, G, B, A
-				final float[] cubeColorData =
+		// R, G, B, A
+		final float[] cubeColorData =
 				{				
 						// Front face (red)
 						1.0f, 0.0f, 0.0f, 1.0f,				
@@ -441,6 +444,24 @@ public class Cube {
 		
 		+"}    \n";
 		return fragmentShader;
+	}
+	
+	/**
+	 * 通过文件的方式加载顶点着色器
+	 * @return
+	 */
+	public String getVertexShaderBlending() {
+		// TODO Auto-generated method stub
+		return GLES20Utils.readTextFileFromRawResource(context, R.raw.vertex_blending);
+	}
+
+	/**
+	 * 通过文件的方式加载片段着色器
+	 * @return
+	 */
+	public String getFragmentShaderBlending() {
+		// TODO Auto-generated method stub
+		return GLES20Utils.readTextFileFromRawResource(context, R.raw.fragment_blending);
 	}
 	
 

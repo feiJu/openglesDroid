@@ -165,11 +165,22 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// 设置背景的颜色
 		GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
+		//GLES20.glFrontFace(GLES20.GL_CCW);
 		// Use culling to remove back faces.
 		GLES20.glEnable(GLES20.GL_CULL_FACE);
-
+		
 		// Enable depth testing
 		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+		
+		
+//		// 测试blending使用如下设置
+//		// Enable blending
+//		GLES20.glDisable(GLES20.GL_CULL_FACE);
+//		// Enable depth testing
+//		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+//		GLES20.glEnable(GLES20.GL_BLEND);
+//		GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE);
+//		
 		
 		// Position the eye behind the origin.
 	    final float eyeX = 0.0f;
@@ -207,9 +218,11 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 //	    String fragmentShader = triangleTest.getFragmentShader();
 	    
 	    // 初始化一个立方体
-	    cube = new Cube();
+	    cube = new Cube(context);
 //	    String vertexShader = cube.getVertexShader();
 //	    String fragmentShader = cube.getFragmentShader();
+	   
+	    
 	    String vertexShader = cube.getVertexShader_lightPerFragment();
 	    String fragmentShader = cube.getFragmentShader_lightPerFragment();
 	    point = new Point();	// 点光源
@@ -225,7 +238,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 //	            new String[] {"a_Position",  "a_Color", "a_Normal", "a_TexCoordinate"});
 	    
 	    // Load the texture
-	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.ic_launcher);
+	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.bumpy_bricks_public_domain);
 	    
 	    if(point == null){	// 如果不用绘制点
 	    	/**
@@ -324,6 +337,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		//GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 		//testTriangles(triangleTest);	
 		testCubes(cube);
+		
+		//GLES20.glDisable(GLES20.GL_CULL_FACE);
 	}
 	
 	/**
@@ -371,7 +386,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         // Calculate position of the light. Rotate and then push into the distance.
         Matrix.setIdentityM(mLightModelMatrix, 0);	// 初始化光照模型矩阵为单位矩阵
         Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, -5.0f);   // 向z轴的负方向平移5个单位   
-        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转,旋转半径为2个单位
+        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees*5, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转,旋转半径为2个单位
         Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 2.0f);	// 再向z轴正方向平移2个单位
         
         /**
@@ -386,7 +401,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
          */
         Matrix.setIdentityM(mModelMatrix, 0);	// 初始化立方体模型矩阵为单位矩阵
         Matrix.translateM(mModelMatrix, 0, 4.0f, 0.0f, -7.0f);	// 模型向X轴正方向平移4个单位，向Z轴负方向平移7个单位
-		Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 0.0f); // 模型绕X轴旋转
+		Matrix.rotateM(mModelMatrix, 0, angleInDegrees*10, 1.0f, 0.0f, 0.0f); // 模型绕X轴旋转
 		cube.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
 				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
 				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
