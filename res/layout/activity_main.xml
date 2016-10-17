@@ -26,11 +26,13 @@
 			android:id="@+id/button_set_min_filter"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"					
-			android:text="set_min_filter" />
+			android:text="set_min_filter" 
+			android:onClick="setMinFilter"/>
 		<Button
 			android:id="@+id/button_set_mag_filter"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"					
-			android:text="set_mag_filter" />	
+			android:text="set_mag_filter" 
+			android:onClick="setMagFilter"/>	
 	</LinearLayout>
 </RelativeLayout>

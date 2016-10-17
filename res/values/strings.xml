@@ -5,4 +5,20 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
+    
+    <string name="lesson_six_set_min_filter_message">Set GL_TEXTURE_MIN_FILTER</string>
+    <string name="lesson_six_set_mag_filter_message">Set GL_TEXTURE_MAG_FILTER</string>
+    
+    <string-array name="lesson_six_min_filter_types">
+    	<item>GL_NEAREST</item>
+    	<item>GL_LINEAR</item>
+    	<item>GL_NEAREST_MIPMAP_NEAREST</item>
+    	<item>GL_NEAREST_MIPMAP_LINEAR</item>
+    	<item>GL_LINEAR_MIPMAP_NEAREST</item>
+    	<item>GL_LINEAR_MIPMAP_LINEAR</item>
+    </string-array>
+    <string-array name="lesson_six_mag_filter_types">
+    	<item>GL_NEAREST</item>
+    	<item>GL_LINEAR</item>    	
+    </string-array>
 </resources>

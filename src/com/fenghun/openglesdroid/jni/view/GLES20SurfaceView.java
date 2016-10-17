@@ -148,6 +148,10 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private float[] mTemporaryMatrix = new float[16];
 	private int mGrassDataHandle;	// 地面贴图句柄
 	
+	/** Temporary place to save the min and mag filter, in case the activity was restarted. */
+	private int mQueuedMinFilter;
+	private int mQueuedMagFilter;
+	
 	public GLES20SurfaceView(Context context) {
 		super(context);
 		this.context = context;
@@ -274,7 +278,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    final float bottom = -1.0f;
 	    final float top = 1.0f;
 	    final float near = 1.0f;
-	    final float far = 10.0f;
+	    final float far = 1000.0f;
 	 
 	    Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
 	}
@@ -318,8 +322,10 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		
 	    // Load the texture
 	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.stone_wall_public_domain);
+	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
 	    mGrassDataHandle = GLES20Utils.loadTexture(context, R.drawable.noisy_grass_public_domain);
-	 
+	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
+	    
 	    // 初始化光源点，以便于观察
 	    point = new Point();
 	    final int pointVertexShaderHandle = GLES20Utils.loadShader(
@@ -333,6 +339,17 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// 初始化一平面
 		plane = new Plane();
 	
+
+	    if (mQueuedMinFilter != 0)
+        {
+        	setMinFilter(mQueuedMinFilter);
+        }
+        
+        if (mQueuedMagFilter != 0)
+        {
+        	setMagFilter(mQueuedMagFilter);
+        }
+	    
 	}
 	
 	
@@ -704,6 +721,43 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	}
 	
 	
+	/**
+	 * 
+	 * @param filter
+	 */
+	public void setMinFilter(final int filter)
+	{
+		if (mTextureDataHandle != 0 && mGrassDataHandle != 0)
+		{
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, filter);
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mGrassDataHandle);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, filter);
+		}
+		else
+		{
+			mQueuedMinFilter = filter;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param filter
+	 */
+	public void setMagFilter(final int filter)
+	{
+		if (mTextureDataHandle != 0 && mGrassDataHandle != 0)
+		{
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, filter);
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mGrassDataHandle);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, filter);
+		}
+		else
+		{
+			mQueuedMagFilter = filter;
+		}
+	}
 	
 	/**
 	 * 重写触屏事件
