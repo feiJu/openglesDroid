@@ -129,12 +129,12 @@ public class LessonFiveRenderer implements GLSurfaceView.Renderer {
 
 	protected String getVertexShader() {
 		return GLES20Utils.readTextFileFromRawResource(mActivityContext,
-				R.raw.vertex_blending);
+				R.raw.blending_vertex);
 	}
 
 	protected String getFragmentShader() {
 		return GLES20Utils.readTextFileFromRawResource(mActivityContext,
-				R.raw.fragment_blending);
+				R.raw.blending_fragment);
 	}
 
 	public void switchMode() {

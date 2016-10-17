@@ -29,6 +29,7 @@ public class Cube {
 	private final FloatBuffer mCubeColors;	// 颜色信息
 	private final FloatBuffer mCubeNormals;	// 法线信息
 	private final FloatBuffer mCubeTextureCoordinates;	// 贴图信息
+	private final FloatBuffer mCubeTextureCoordinatesForPlane; // 地面，
 	
 	/** Allocate storage for the final combined matrix. This will be passed into the shader program. */
 	private float[] mMVPMatrix = new float[16];
@@ -78,12 +79,12 @@ public class Cube {
 						1.0f, 1.0f, -1.0f,
 						
 						// Back face
-						1.0f, 1.0f, -1.0f,				
-						1.0f, -1.0f, -1.0f,
-						-1.0f, 1.0f, -1.0f,
-						1.0f, -1.0f, -1.0f,				
-						-1.0f, -1.0f, -1.0f,
-						-1.0f, 1.0f, -1.0f,
+						1.0f, 1.0f, -1.0f,		// 2			
+						1.0f, -1.0f, -1.0f,		// 1
+						-1.0f, 1.0f, -1.0f,		// 3
+						1.0f, -1.0f, -1.0f,		// 1			
+						-1.0f, -1.0f, -1.0f,	// 0
+						-1.0f, 1.0f, -1.0f,		// 3
 						
 						// Left face
 						-1.0f, 1.0f, -1.0f,				
@@ -276,6 +277,63 @@ public class Cube {
 						1.0f, 0.0f
 		};
 				
+		// S, T (or X, Y)
+		// Texture coordinate data.
+		// Because images have a Y axis pointing downward (values increase as you move down the image) while
+		// OpenGL has a Y axis pointing upward, we adjust for that here by flipping the Y axis.
+		// What's more is that the texture coordinates are the same for every face.
+		final float[] cubeTextureCoordinateDataForPlane = {												
+						// Front face
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f,				
+						
+						// Right face 
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f,	
+						
+						// Back face 
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f,	
+						
+						// Left face 
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f,	
+						
+						// Top face 
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f,	
+						
+						// Bottom face 
+						0.0f, 0.0f, 				
+						0.0f, 25.0f,
+						25.0f, 0.0f,
+						0.0f, 25.0f,
+						25.0f, 25.0f,
+						25.0f, 0.0f
+				};
+				
+				
+				
 		// Initialize the buffers.
 		mCubePositions = ByteBuffer
 				.allocateDirect(cubePositionData.length * mBytesPerFloat)
@@ -295,6 +353,14 @@ public class Cube {
 		mCubeTextureCoordinates = ByteBuffer.allocateDirect(cubeTextureCoordinateData.length * mBytesPerFloat)
 				.order(ByteOrder.nativeOrder()).asFloatBuffer();
 		mCubeTextureCoordinates.put(cubeTextureCoordinateData).position(0);
+
+		mCubeTextureCoordinatesForPlane = ByteBuffer
+				.allocateDirect(
+						cubeTextureCoordinateDataForPlane.length
+								* mBytesPerFloat)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mCubeTextureCoordinatesForPlane.put(cubeTextureCoordinateDataForPlane)
+				.position(0);
 	}
 	
 	/**
@@ -452,7 +518,7 @@ public class Cube {
 	 */
 	public String getVertexShaderBlending() {
 		// TODO Auto-generated method stub
-		return GLES20Utils.readTextFileFromRawResource(context, R.raw.vertex_blending);
+		return GLES20Utils.readTextFileFromRawResource(context, R.raw.blending_vertex);
 	}
 
 	/**
@@ -461,7 +527,7 @@ public class Cube {
 	 */
 	public String getFragmentShaderBlending() {
 		// TODO Auto-generated method stub
-		return GLES20Utils.readTextFileFromRawResource(context, R.raw.fragment_blending);
+		return GLES20Utils.readTextFileFromRawResource(context, R.raw.blending_fragment);
 	}
 	
 
@@ -479,12 +545,17 @@ public class Cube {
 
 		GLES20.glEnableVertexAttribArray(mPositionHandle);
 
+		
+		
 		// Pass in the color information
-		mCubeColors.position(0);
-		GLES20.glVertexAttribPointer(mColorHandle, mColorDataSize,
-				GLES20.GL_FLOAT, false, 0, mCubeColors);	// 传入颜色信息
+		if(mColorHandle >=0){
+			mCubeColors.position(0);
+			GLES20.glVertexAttribPointer(mColorHandle, mColorDataSize,
+					GLES20.GL_FLOAT, false, 0, mCubeColors);	// 传入颜色信息
 
-		GLES20.glEnableVertexAttribArray(mColorHandle);
+			GLES20.glEnableVertexAttribArray(mColorHandle);
+		}
+		
 
 		// Pass in the normal information
 		mCubeNormals.position(0);
@@ -492,6 +563,7 @@ public class Cube {
 				GLES20.GL_FLOAT, false, 0, mCubeNormals);	// 传入法线信息
 
 		GLES20.glEnableVertexAttribArray(mNormalHandle);
+		
 		
 		// Pass in the texture coordinate information
         mCubeTextureCoordinates.position(0);
@@ -526,5 +598,44 @@ public class Cube {
 
 	public float[] getmMVPMatrix() {
 		return mMVPMatrix;
+	}
+
+	public void drawPlane(int mPositionHandle, int mColorHandle,
+			int mNormalHandle, float[] mViewMatrix, float[] mModelMatrix,
+			int mMVMatrixHandle, float[] mProjectionMatrix,
+			int mMVPMatrixHandle, int mLightPosHandle,
+			float[] mLightPosInEyeSpace, int mGrassDataHandle) {
+		// TODO Auto-generated method stub
+		
+		// 传入材质坐标信息
+		// Pass in the texture coordinate information
+		mCubeTextureCoordinatesForPlane.position(0);
+		GLES20.glVertexAttribPointer(mGrassDataHandle,
+				mTextureCoordinateDataSize, GLES20.GL_FLOAT, false, 0,
+				mCubeTextureCoordinatesForPlane);
+		GLES20.glEnableVertexAttribArray(mGrassDataHandle); // 传入贴图信息
+
+		// This multiplies the view matrix by the model matrix, and stores the
+		// result in the MVP matrix
+		// (which currently contains model * view).获取模型和视图矩阵乘积，目前只有M和V信息
+		Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0);
+
+		// Pass in the modelview matrix.
+		GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0);// 传入M和V信息，保存在顶点着色器的u_MVMatrix常量中
+
+		// This multiplies the modelview matrix by the projection matrix, and
+		// stores the result in the MVP matrix
+		// (which now contains model * view * projection).获取透视矩阵信息，目前含有M、V和P信息
+		Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
+
+		// Pass in the combined matrix.
+		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);// 传入M、V和P信息，保存在顶点着色器的u_MVPMatrix常量中
+
+		// Pass in the light position in eye space.传入光源在视图空间的位置信息
+		GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0],
+				mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+
+		// Draw the cube.
+		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
 	}
 }

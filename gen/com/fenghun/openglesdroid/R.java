@@ -24,9 +24,13 @@ public final class R {
     public static final class drawable {
         public static final int bumpy_bricks_public_domain=0x7f020000;
         public static final int ic_launcher=0x7f020001;
+        public static final int noisy_grass_public_domain=0x7f020002;
+        public static final int stone_wall_public_domain=0x7f020003;
     }
     public static final class id {
-        public static final int action_settings=0x7f090001;
+        public static final int action_settings=0x7f090003;
+        public static final int button_set_mag_filter=0x7f090002;
+        public static final int button_set_min_filter=0x7f090001;
         public static final int surfaceViewFL=0x7f090000;
     }
     public static final class layout {
@@ -36,8 +40,10 @@ public final class R {
         public static final int main=0x7f080000;
     }
     public static final class raw {
-        public static final int fragment_blending=0x7f040000;
-        public static final int vertex_blending=0x7f040001;
+        public static final int blending_fragment=0x7f040000;
+        public static final int blending_vertex=0x7f040001;
+        public static final int per_pixel_fragment_shader_tex_and_light=0x7f040002;
+        public static final int per_pixel_vertex_shader_tex_and_light=0x7f040003;
     }
     public static final class string {
         public static final int action_settings=0x7f060002;
