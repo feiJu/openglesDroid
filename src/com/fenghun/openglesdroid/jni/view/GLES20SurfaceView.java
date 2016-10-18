@@ -1,16 +1,22 @@
 package com.fenghun.openglesdroid.jni.view;
 
 import java.nio.FloatBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.fenghun.openglesdroid.MainActivity;
 import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.bean20.Cube;
+import com.fenghun.openglesdroid.jni.bean20.Cubes;
+import com.fenghun.openglesdroid.jni.bean20.CubesClientSide;
+import com.fenghun.openglesdroid.jni.bean20.CubesClientSideWithStride;
+import com.fenghun.openglesdroid.jni.bean20.CubesWithVBOWithStride;
+import com.fenghun.openglesdroid.jni.bean20.CubesWithVbo;
 import com.fenghun.openglesdroid.jni.bean20.Plane;
 import com.fenghun.openglesdroid.jni.bean20.Point;
-import com.fenghun.openglesdroid.jni.bean20.Square;
-import com.fenghun.openglesdroid.jni.bean20.Triangle;
 import com.fenghun.openglesdroid.jni.bean20.TriangleTest;
 import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
 
@@ -23,6 +29,7 @@ import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 /**
  * 支持OpenGLES2.0 使用OpenGLES2.0版本
@@ -152,6 +159,30 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private int mQueuedMinFilter;
 	private int mQueuedMagFilter;
 	
+	
+	// VBOs
+	/** Additional info for cube generation. 
+	 * 初始化立方体个数
+	 */
+	private int mLastRequestedCubeFactor;
+	private int mActualCubeFactor;
+	/** Thread executor for generating cube data in the background. 
+	 * 线程池
+	 */
+	private final ExecutorService mSingleThreadedExecutor = Executors.newSingleThreadExecutor();
+	/** The current cubes object. */
+	private Cubes mCubes;
+	
+	/** Control whether vertex buffer objects or client-side memory will be used for rendering. */
+	private boolean mUseVBOs = true;
+	/** Control whether strides will be used. */
+	private boolean mUseStride = true;
+	private MainActivity mainActivity;
+	private int mProgramHandle;
+	private int mAndroidDataHandle;
+	private float[] mMVPMatrixVBOs = new float[16];;
+	
+	
 	public GLES20SurfaceView(Context context) {
 		super(context);
 		this.context = context;
@@ -165,10 +196,11 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		init();
 	}
 
-	public GLES20SurfaceView(Context context, float density) {
+	public GLES20SurfaceView(MainActivity mainActivity, float density) {
 		// TODO Auto-generated constructor stub
-		super(context);
-		this.context = context;
+		super(mainActivity);
+		this.mainActivity = mainActivity;
+		this.context = mainActivity;
 		init();
 		mDensity = density;
 	}
@@ -189,7 +221,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
 		// TODO Auto-generated method stub
 		// MyOpenglES.onSurfaceCreated(640, 480);
-
+		
 		// 设置背景的颜色
 		GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -213,7 +245,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// Position the eye behind the origin.
 	    final float eyeX = 0.0f;
 	    final float eyeY = 0.0f;
-	    final float eyeZ = 1.5f;
+	    final float eyeZ = 0.0f;
 	 
 	    // We are looking toward the distance
 	    final float lookX = 0.0f;
@@ -244,20 +276,18 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 //	    triangleTest = new TriangleTest();
 //	    String vertexShader = triangleTest.getVertexShader();
 //	    String fragmentShader = triangleTest.getFragmentShader();
-	    
-	    // 初始化一个立方体
-	    cube = new Cube(context);
-//	    String vertexShader = cube.getVertexShader();
-//	    String fragmentShader = cube.getFragmentShader();
 	   
 	    // 测试光照，贴图等
 	    // testCubesInit();
 		
 	    // 测试texture filter
-	    testTextureFilterInit();
+	    //testTextureFilterInit();
 	    
-	    Matrix.setIdentityM(mAccumulatedRotation, 0);	// 初始化矩阵
+	    // 测试Vertex Buffer Objects (VBOs)
+	    testVBOsInit();
+	   
 	}
+
 
 
 	@Override
@@ -296,10 +326,129 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		//testCubes(cube);
 		
 		// 测试材质过滤器，设置材质显示效果
-		testTextureFilter(cube);
+		//testTextureFilter(cube);
 		
-		//GLES20.glDisable(GLES20.GL_CULL_FACE);
+		// 测试Vertex Buffer Objects (VBOs)
+	    testVBOs(); 
+		
 	}
+	
+	
+
+	/**
+	 * 之前采用的缓存方式都是在客户端内存，仅当实时渲染的时候传入GPU，这种方式适用于数据量比较小的情况，
+	 * 如果数据量比较大会对客户端即cpu和内存的使用造成额外的开销，VBO（Vertex Buffer Objects）方式
+	 * 可以实现顶点数据一次性出传入，渲染也会使用GPU缓存
+	 */
+	private void testVBOsInit() {
+		// TODO Auto-generated method stub
+		mLastRequestedCubeFactor = mActualCubeFactor = 3;
+		generateCubes(mActualCubeFactor, false, false);		// 初始化立方体
+		
+		final String vertexShader = GLES20Utils.readTextFileFromRawResource(context, R.raw.vbo_vertex_shader);   		
+ 		final String fragmentShader = GLES20Utils.readTextFileFromRawResource(context, R.raw.vbo_fragment_shader);
+ 				
+		final int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);		
+		final int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);		
+		
+		mProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle, 
+				new String[] {"a_Position",  "a_Normal", "a_TexCoordinate"});		            
+        
+		// Load the texture
+		mAndroidDataHandle = GLES20Utils.loadTexture(context, R.drawable.usb_android);		
+		GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);			
+		
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mAndroidDataHandle);		
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);		
+		
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mAndroidDataHandle);		
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR_MIPMAP_LINEAR);		
+        
+        // Initialize the accumulated rotation matrix
+        Matrix.setIdentityM(mAccumulatedRotation, 0);    
+	}
+	
+
+	private void testVBOs() {
+		// TODO Auto-generated method stub
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);			                                    
+        
+        // Set our per-vertex lighting program.
+        GLES20.glUseProgram(mProgramHandle);   
+        
+        // Set program handles for cube drawing.
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVMatrix"); 
+        mLightPosHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_LightPos");
+        mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Texture");
+        mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Position");        
+        mNormalHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Normal"); 
+        mTextureCoordinateHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_TexCoordinate");
+        
+        // 计算光源位置
+        // Calculate position of the light. Push into the distance.
+        Matrix.setIdentityM(mLightModelMatrix, 0);                     
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, -1.0f);
+               
+        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
+        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);                      
+        
+        // Draw a cube.
+        // Translate the cube into the screen.
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -3.5f);     
+        
+        // Set a matrix that contains the current rotation.
+        Matrix.setIdentityM(mCurrentRotation, 0);        
+    	Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
+    	Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);
+    	mDeltaX = 0.0f;
+    	mDeltaY = 0.0f;
+    	    	
+    	// Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
+    	Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+    	System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
+    	    	
+        // Rotate the cube taking the overall rotation into account.     	
+    	Matrix.multiplyMM(mTemporaryMatrix, 0, mModelMatrix, 0, mAccumulatedRotation, 0);
+    	System.arraycopy(mTemporaryMatrix, 0, mModelMatrix, 0, 16);   
+    	
+    	// This multiplies the view matrix by the model matrix, and stores
+		// the result in the MVP matrix
+		// (which currently contains model * view).
+		Matrix.multiplyMM(mMVPMatrixVBOs, 0, mViewMatrix, 0, mModelMatrix, 0);
+
+		// Pass in the modelview matrix.
+		GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrixVBOs, 0);
+
+		// This multiplies the modelview matrix by the projection matrix,
+		// and stores the result in the MVP matrix
+		// (which now contains model * view * projection).
+		Matrix.multiplyMM(mTemporaryMatrix, 0, mProjectionMatrix, 0, mMVPMatrixVBOs, 0);
+		System.arraycopy(mTemporaryMatrix, 0, mMVPMatrixVBOs, 0, 16);
+
+		// Pass in the combined matrix.
+		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrixVBOs, 0);
+
+		// Pass in the light position in eye space.
+		GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+		
+		// Pass in the texture information
+		// Set the active texture unit to texture unit 0.
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+
+		// Bind the texture to this unit.
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mAndroidDataHandle);
+
+		// Tell the texture uniform sampler to use this texture in the
+		// shader by binding to texture unit 0.
+		GLES20.glUniform1i(mTextureUniformHandle, 0);
+        
+		if (mCubes != null) {
+			mCubes.render(mPositionHandle, mNormalHandle, mTextureCoordinateHandle, mActualCubeFactor);
+		}
+	}
+	
 	
 	/**
 	 * 测试材质过滤器，设置材质显示效果
@@ -308,6 +457,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private void testTextureFilterInit() {
 		// TODO Auto-generated method stub
 
+		  // 初始化一个立方体
+	    cube = new Cube(context);
 		String vertexShader = GLES20Utils.readTextFileFromRawResource(context,
 				R.raw.per_pixel_vertex_shader_tex_and_light); // 顶点着色器
 		String fragmentShader = GLES20Utils.readTextFileFromRawResource(
@@ -349,7 +500,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         {
         	setMagFilter(mQueuedMagFilter);
         }
-	    
+        Matrix.setIdentityM(mAccumulatedRotation, 0);	// 初始化矩阵
 	}
 	
 	
@@ -475,7 +626,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	 */
 	private void testCubesInit() {
 		// TODO Auto-generated method stub
-
+		  // 初始化一个立方体
+	    cube = new Cube(context);
 	    String vertexShader = cube.getVertexShader_lightPerFragment();
 	    String fragmentShader = cube.getFragmentShader_lightPerFragment();
 	    point = new Point();	// 点光源
@@ -760,6 +912,266 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	}
 	
 	/**
+	 * 初始化立方体
+	 * 
+	 * @param cubeFactor 立方体个数因子
+	 * @param toggleVbos
+	 * @param toggleStride
+	 */
+	private void generateCubes(int cubeFactor, boolean toggleVbos, boolean toggleStride) {
+		mSingleThreadedExecutor.submit(new GenDataRunnable(cubeFactor, toggleVbos, toggleStride));		
+	}
+	
+
+	class GenDataRunnable implements Runnable {
+		final int mRequestedCubeFactor;
+		final boolean mToggleVbos;
+		final boolean mToggleStride;
+		
+		GenDataRunnable(int requestedCubeFactor, boolean toggleVbos, boolean toggleStride) {
+			mRequestedCubeFactor = requestedCubeFactor; 
+			mToggleVbos = toggleVbos;	
+			mToggleStride = toggleStride;
+		}
+		
+		@Override
+		public void run() {			
+			try {
+				// X, Y, Z
+				// The normal is used in light calculations and is a vector which points
+				// orthogonal to the plane of the surface. For a cube model, the normals
+				// should be orthogonal to the points of each face.法线信息
+				final float[] cubeNormalData =
+				{												
+						// Front face
+						0.0f, 0.0f, 1.0f,				
+						0.0f, 0.0f, 1.0f,
+						0.0f, 0.0f, 1.0f,
+						0.0f, 0.0f, 1.0f,				
+						0.0f, 0.0f, 1.0f,
+						0.0f, 0.0f, 1.0f,
+						
+						// Right face 
+						1.0f, 0.0f, 0.0f,				
+						1.0f, 0.0f, 0.0f,
+						1.0f, 0.0f, 0.0f,
+						1.0f, 0.0f, 0.0f,				
+						1.0f, 0.0f, 0.0f,
+						1.0f, 0.0f, 0.0f,
+						
+						// Back face 
+						0.0f, 0.0f, -1.0f,				
+						0.0f, 0.0f, -1.0f,
+						0.0f, 0.0f, -1.0f,
+						0.0f, 0.0f, -1.0f,				
+						0.0f, 0.0f, -1.0f,
+						0.0f, 0.0f, -1.0f,
+						
+						// Left face 
+						-1.0f, 0.0f, 0.0f,				
+						-1.0f, 0.0f, 0.0f,
+						-1.0f, 0.0f, 0.0f,
+						-1.0f, 0.0f, 0.0f,				
+						-1.0f, 0.0f, 0.0f,
+						-1.0f, 0.0f, 0.0f,
+						
+						// Top face 
+						0.0f, 1.0f, 0.0f,			
+						0.0f, 1.0f, 0.0f,
+						0.0f, 1.0f, 0.0f,
+						0.0f, 1.0f, 0.0f,				
+						0.0f, 1.0f, 0.0f,
+						0.0f, 1.0f, 0.0f,
+						
+						// Bottom face 
+						0.0f, -1.0f, 0.0f,			
+						0.0f, -1.0f, 0.0f,
+						0.0f, -1.0f, 0.0f,
+						0.0f, -1.0f, 0.0f,				
+						0.0f, -1.0f, 0.0f,
+						0.0f, -1.0f, 0.0f
+				};
+				
+				// S, T (or X, Y)
+				// Texture coordinate data.
+				// Because images have a Y axis pointing downward (values increase as you move down the image) while
+				// OpenGL has a Y axis pointing upward, we adjust for that here by flipping the Y axis.
+				// What's more is that the texture coordinates are the same for every face.贴图坐标信息
+				final float[] cubeTextureCoordinateData =
+				{												
+						// Front face
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,				
+						
+						// Right face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Back face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Left face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Top face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f,	
+						
+						// Bottom face 
+						0.0f, 0.0f, 				
+						0.0f, 1.0f,
+						1.0f, 0.0f,
+						0.0f, 1.0f,
+						1.0f, 1.0f,
+						1.0f, 0.0f
+				};		
+							
+				final float[] cubePositionData = new float[108 * mRequestedCubeFactor * mRequestedCubeFactor * mRequestedCubeFactor];
+				int cubePositionDataOffset = 0;
+									
+				final int segments = mRequestedCubeFactor + (mRequestedCubeFactor - 1);	// 一个边上绘制立方体个数+立方体间的间隙（与小立方体边长相等）
+				final float minPosition = -1.0f;
+				final float maxPosition = 1.0f;
+				final float positionRange = maxPosition - minPosition;	// 整个大立方体的取值范围
+				
+				for (int x = 0; x < mRequestedCubeFactor; x++) {
+					for (int y = 0; y < mRequestedCubeFactor; y++) {
+						for (int z = 0; z < mRequestedCubeFactor; z++) {
+							final float x1 = minPosition + ((positionRange / segments) * (x * 2));
+							final float x2 = minPosition + ((positionRange / segments) * ((x * 2) + 1));
+							
+							final float y1 = minPosition + ((positionRange / segments) * (y * 2));
+							final float y2 = minPosition + ((positionRange / segments) * ((y * 2) + 1));
+							
+							final float z1 = minPosition + ((positionRange / segments) * (z * 2));
+							final float z2 = minPosition + ((positionRange / segments) * ((z * 2) + 1));
+							
+							// Define points for a cube.
+							// X, Y, Z
+							final float[] p1p = { x1, y2, z2 };
+							final float[] p2p = { x2, y2, z2 };
+							final float[] p3p = { x1, y1, z2 };
+							final float[] p4p = { x2, y1, z2 };
+							final float[] p5p = { x1, y2, z1 };
+							final float[] p6p = { x2, y2, z1 };
+							final float[] p7p = { x1, y1, z1 };
+							final float[] p8p = { x2, y1, z1 };
+
+							// 将8个顶点按顺序排好
+							final float[] thisCubePositionData = GLES20Utils.generateCubeData(p1p, p2p, p3p, p4p, p5p, p6p, p7p, p8p,
+									p1p.length);
+							
+							System.arraycopy(thisCubePositionData, 0, cubePositionData, cubePositionDataOffset, thisCubePositionData.length);
+							cubePositionDataOffset += thisCubePositionData.length;
+						}
+					}
+				}					
+				
+				// Run on the GL thread -- the same thread the other members of the renderer run in.
+				GLES20SurfaceView.this.queueEvent(new Runnable() {
+					@Override
+					public void run() {												
+						if (mCubes != null) {
+							mCubes.release();
+							mCubes = null;
+						}
+						
+						// Not supposed to manually call this, but Dalvik sometimes needs some additional prodding to clean up the heap.
+						System.gc();
+						
+						try {
+							boolean useVbos = mUseVBOs;
+							boolean useStride = mUseStride;	
+							
+							if (mToggleVbos) {
+								useVbos = !useVbos;
+							}
+							
+							if (mToggleStride) {
+								useStride = !useStride;
+							}
+							
+							if (useStride) {
+								if (useVbos) {
+									mCubes = new CubesWithVBOWithStride(cubePositionData, cubeNormalData, cubeTextureCoordinateData, mRequestedCubeFactor);											
+								} else {
+									mCubes = new CubesClientSideWithStride(cubePositionData, cubeNormalData, cubeTextureCoordinateData, mRequestedCubeFactor);
+								}
+							} else {
+								if (useVbos) {
+									
+									mCubes = new CubesWithVbo(cubePositionData, cubeNormalData, cubeTextureCoordinateData, mRequestedCubeFactor);											
+								} else {
+									
+									mCubes = new CubesClientSide(cubePositionData, cubeNormalData, cubeTextureCoordinateData, mRequestedCubeFactor);
+								}
+							}	
+																			
+							mUseVBOs = useVbos;
+							mainActivity.updateVboStatus(mUseVBOs);
+							
+							mUseStride = useStride;													
+							mainActivity.updateStrideStatus(mUseStride);	
+							
+							mActualCubeFactor = mRequestedCubeFactor;
+						} catch (OutOfMemoryError err) {
+							if (mCubes != null) {
+								mCubes.release();
+								mCubes = null;
+							}
+							
+							// Not supposed to manually call this, but Dalvik sometimes needs some additional prodding to clean up the heap.
+							System.gc();
+							
+							mainActivity.runOnUiThread(new Runnable() {							
+								@Override
+								public void run() {
+									Toast.makeText(context, "Out of memory; Dalvik takes a while to clean up the memory. Please try again.\nExternal bytes allocated=" , Toast.LENGTH_LONG).show();								
+								}
+							});										
+						}																	
+					}				
+				});
+			} catch (OutOfMemoryError e) {
+				// Not supposed to manually call this, but Dalvik sometimes needs some additional prodding to clean up the heap.
+				System.gc();
+				
+				mainActivity.runOnUiThread(new Runnable() {							
+					@Override
+					public void run() {
+						Toast.makeText(context, "Out of memory; Dalvik takes a while to clean up the memory. Please try again.\nExternal bytes allocated=" 
+								, Toast.LENGTH_LONG).show();								
+					}
+				});
+			}			
+		}
+	}
+	
+	
+	/**
+	 * 
 	 * 重写触屏事件
 	 */
 	@Override
@@ -780,7 +1192,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 					mDeltaX += deltaX;
 					mDeltaY += deltaY;
 					
-					System.out.println("------mDeltaX=="+mDeltaX+",mDeltaY="+mDeltaY);
+					//System.out.println("------mDeltaX=="+mDeltaX+",mDeltaY="+mDeltaY);
 				//}
 			}	
 			
@@ -794,4 +1206,37 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 			return super.onTouchEvent(event);
 		}		
 	}
+
+	public void decreaseCubeCount() {
+		// TODO Auto-generated method stub
+		if (mLastRequestedCubeFactor > 1) {
+			generateCubes(--mLastRequestedCubeFactor, false, false);
+		}
+	}
+
+	public void increaseCubeCount() {
+		// TODO Auto-generated method stub
+		//if (mLastRequestedCubeFactor < 16) {
+			generateCubes(++mLastRequestedCubeFactor, false, false);
+		//}
+	}
+
+	public void toggleVBOs() {
+		// TODO Auto-generated method stub
+		generateCubes(mLastRequestedCubeFactor, true, false);
+	}
+
+	public void toggleStride() {
+		// TODO Auto-generated method stub
+		generateCubes(mLastRequestedCubeFactor, false, true);	
+	}
+
+	public int getmLastRequestedCubeFactor() {
+		return mLastRequestedCubeFactor;
+	}
+
+	public void setmLastRequestedCubeFactor(int mLastRequestedCubeFactor) {
+		this.mLastRequestedCubeFactor = mLastRequestedCubeFactor;
+	}
+	
 }

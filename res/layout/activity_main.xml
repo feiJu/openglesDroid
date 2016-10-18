@@ -21,7 +21,8 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:layout_centerHorizontal="true"
-		android:orientation="horizontal">
+		android:orientation="horizontal"
+		android:visibility="gone">
 		<Button
 			android:id="@+id/button_set_min_filter"
 			android:layout_width="wrap_content"
@@ -34,5 +35,41 @@
 			android:layout_height="wrap_content"					
 			android:text="set_mag_filter" 
 			android:onClick="setMagFilter"/>	
+	</LinearLayout>
+	
+	<LinearLayout		
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:layout_centerHorizontal="true"
+		android:orientation="horizontal">
+		<Button
+			android:id="@+id/button_decrease_num_cubes"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="match_parent"					
+			android:text="@string/lesson_seven_decrease_cube_count" 
+			android:onClick="decreaseNumCubes"/>	
+		<Button
+			android:id="@+id/button_increase_num_cubes"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="match_parent"					
+			android:text="@string/lesson_seven_increase_cube_count" 
+			android:onClick="increaseNumCubes"/>
+		<Button
+			android:id="@+id/button_switch_VBOs"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="match_parent"					
+			android:text="@string/lesson_seven_using_VBOs"
+			android:onClick="switchVBOs" />
+		<Button
+			android:id="@+id/button_switch_stride"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="match_parent"					
+			android:text="@string/lesson_seven_using_stride"
+			android:onClick="switchStride" />				
 	</LinearLayout>
 </RelativeLayout>

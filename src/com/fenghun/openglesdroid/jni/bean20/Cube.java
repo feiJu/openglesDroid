@@ -335,11 +335,24 @@ public class Cube {
 				
 				
 		// Initialize the buffers.
-		mCubePositions = ByteBuffer
-				.allocateDirect(cubePositionData.length * mBytesPerFloat)
-				.order(ByteOrder.nativeOrder()).asFloatBuffer();
-		mCubePositions.put(cubePositionData).position(0);
+		mCubePositions = 
+		
+		// Allocate a direct block of memory on the native heap,
+		// size in bytes is equal to cubePositions.length * BYTES_PER_FLOAT.
+		// BYTES_PER_FLOAT is equal to 4, since a float is 32-bits, or 4 bytes.
+		ByteBuffer.allocateDirect(cubePositionData.length * mBytesPerFloat)
+		// Floats can be in big-endian or little-endian order.
+		// We want the same as the native platform.
+		.order(ByteOrder.nativeOrder())
+		// Give us a floating-point view on this byte buffer.
+		.asFloatBuffer();
+		// Copy data from the Java heap to the native heap.
+		mCubePositions.put(cubePositionData)
+		// Reset the buffer position to the beginning of the buffer.
+		.position(0);
 
+		
+		
 		mCubeColors = ByteBuffer
 				.allocateDirect(cubeColorData.length * mBytesPerFloat)
 				.order(ByteOrder.nativeOrder()).asFloatBuffer();

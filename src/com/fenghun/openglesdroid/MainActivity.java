@@ -1,10 +1,7 @@
 package com.fenghun.openglesdroid;
 
 import com.fenghun.openglesdroid.jni.MyOpenglES;
-import com.fenghun.openglesdroid.jni.view.GLES10SurfaceView;
 import com.fenghun.openglesdroid.jni.view.GLES20SurfaceView;
-import com.fenghun.openglesdroid.jni.view.LessonFiveRenderer;
-import com.fenghun.openglesdroid.jni.view.TestBlendingGL20SurfaceView;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -19,7 +16,9 @@ import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -220,5 +219,86 @@ public class MainActivity extends Activity {
 	    }
 	    
 	    return dialog;
+	}
+
+	private void decreaseCubeCount() {
+		surfaceView.queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				surfaceView.decreaseCubeCount();
+			}
+		});
+	}
+
+	private void increaseCubeCount() {
+		Toast.makeText(this,""+ (surfaceView.getmLastRequestedCubeFactor()+1) , Toast.LENGTH_SHORT).show();
+		surfaceView.queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				surfaceView.increaseCubeCount();
+			}
+		});
+	}
+
+	private void toggleVBOs() {
+		surfaceView.queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				surfaceView.toggleVBOs();
+			}
+		});
+	}
+	
+	protected void toggleStride() {
+		surfaceView.queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				surfaceView.toggleStride();
+			}
+		});	
+	}
+	
+	public void decreaseNumCubes(View view){
+		decreaseCubeCount();
+	}
+	
+	public void increaseNumCubes(View view){
+		increaseCubeCount();
+	}
+	
+	public void switchVBOs(View view){
+		toggleVBOs();
+	}
+	
+	public void switchStride(View view){
+		toggleStride();
+	}
+	
+	public void updateVboStatus(final boolean usingVbos) {
+		// TODO Auto-generated method stub
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (usingVbos) {
+					((Button) findViewById(R.id.button_switch_VBOs)).setText(R.string.lesson_seven_using_VBOs);
+				} else {
+					((Button) findViewById(R.id.button_switch_VBOs)).setText(R.string.lesson_seven_not_using_VBOs);
+				}
+			}
+		});
+	}
+
+	public void updateStrideStatus(final boolean useStride) {
+		// TODO Auto-generated method stub
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (useStride) {
+					((Button) findViewById(R.id.button_switch_stride)).setText(R.string.lesson_seven_using_stride);
+				} else {
+					((Button) findViewById(R.id.button_switch_stride)).setText(R.string.lesson_seven_not_using_stride);
+				}
+			}
+		});
 	}
 }

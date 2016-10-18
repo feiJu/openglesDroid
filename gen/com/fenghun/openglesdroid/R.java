@@ -30,11 +30,16 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
         public static final int noisy_grass_public_domain=0x7f020002;
         public static final int stone_wall_public_domain=0x7f020003;
+        public static final int usb_android=0x7f020004;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a0003;
+        public static final int action_settings=0x7f0a0007;
+        public static final int button_decrease_num_cubes=0x7f0a0003;
+        public static final int button_increase_num_cubes=0x7f0a0004;
         public static final int button_set_mag_filter=0x7f0a0002;
         public static final int button_set_min_filter=0x7f0a0001;
+        public static final int button_switch_VBOs=0x7f0a0005;
+        public static final int button_switch_stride=0x7f0a0006;
         public static final int surfaceViewFL=0x7f0a0000;
     }
     public static final class layout {
@@ -48,11 +53,25 @@ public final class R {
         public static final int blending_vertex=0x7f040001;
         public static final int per_pixel_fragment_shader_tex_and_light=0x7f040002;
         public static final int per_pixel_vertex_shader_tex_and_light=0x7f040003;
+        public static final int vbo_fragment_shader=0x7f040004;
+        public static final int vbo_vertex_shader=0x7f040005;
     }
     public static final class string {
         public static final int action_settings=0x7f060002;
         public static final int app_name=0x7f060000;
         public static final int hello_world=0x7f060001;
+        public static final int lesson_eight=0x7f06000d;
+        public static final int lesson_eight_error_could_not_create_vbo=0x7f06000f;
+        public static final int lesson_eight_error_unknown=0x7f060010;
+        public static final int lesson_eight_subtitle=0x7f06000e;
+        public static final int lesson_seven=0x7f060005;
+        public static final int lesson_seven_decrease_cube_count=0x7f060008;
+        public static final int lesson_seven_increase_cube_count=0x7f060007;
+        public static final int lesson_seven_not_using_VBOs=0x7f06000a;
+        public static final int lesson_seven_not_using_stride=0x7f06000c;
+        public static final int lesson_seven_subtitle=0x7f060006;
+        public static final int lesson_seven_using_VBOs=0x7f060009;
+        public static final int lesson_seven_using_stride=0x7f06000b;
         public static final int lesson_six_set_mag_filter_message=0x7f060004;
         public static final int lesson_six_set_min_filter_message=0x7f060003;
     }
