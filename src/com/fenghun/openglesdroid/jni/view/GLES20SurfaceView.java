@@ -15,6 +15,8 @@ import com.fenghun.openglesdroid.jni.bean20.CubesClientSide;
 import com.fenghun.openglesdroid.jni.bean20.CubesClientSideWithStride;
 import com.fenghun.openglesdroid.jni.bean20.CubesWithVBOWithStride;
 import com.fenghun.openglesdroid.jni.bean20.CubesWithVbo;
+import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
+import com.fenghun.openglesdroid.jni.bean20.HeightMap;
 import com.fenghun.openglesdroid.jni.bean20.Plane;
 import com.fenghun.openglesdroid.jni.bean20.Point;
 import com.fenghun.openglesdroid.jni.bean20.TriangleTest;
@@ -183,6 +185,22 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private float[] mMVPMatrixVBOs = new float[16];;
 	
 	
+	// IBOs
+	/** The current heightmap object. */
+	private HeightMap heightMap;
+	private ErrorHandler errorHandler;
+	private int programIBOs;
+	
+	/** Identifiers for our uniforms and attributes inside the shaders. */
+	private static final String MVP_MATRIX_UNIFORM = "u_MVPMatrix";
+	private static final String MV_MATRIX_UNIFORM = "u_MVMatrix";
+	private static final String LIGHT_POSITION_UNIFORM = "u_LightPos";
+	private static final String POSITION_ATTRIBUTE = "a_Position";
+	private static final String NORMAL_ATTRIBUTE = "a_Normal";
+	private static final String COLOR_ATTRIBUTE = "a_Color";
+	private float[] mMvpMatrixIBOs= new float[16];
+	
+	
 	public GLES20SurfaceView(Context context) {
 		super(context);
 		this.context = context;
@@ -203,6 +221,17 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		this.context = mainActivity;
 		init();
 		mDensity = density;
+	}
+	
+	
+	public GLES20SurfaceView(MainActivity mainActivity, float density,ErrorHandler errorHandler) {
+		// TODO Auto-generated constructor stub
+		super(mainActivity);
+		this.mainActivity = mainActivity;
+		this.context = mainActivity;
+		init();
+		mDensity = density;
+		this.errorHandler = errorHandler;
 	}
 
 	/**
@@ -284,11 +313,12 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    //testTextureFilterInit();
 	    
 	    // 测试Vertex Buffer Objects (VBOs)
-	    testVBOsInit();
+	    //testVBOsInit();
 	   
+	    // 测试 Index Buffer Objects (IBOs)
+	    testIBOsInit();
+	    
 	}
-
-
 
 	@Override
 	public void onSurfaceChanged(GL10 glUnused, int width, int height) {
@@ -329,12 +359,106 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		//testTextureFilter(cube);
 		
 		// 测试Vertex Buffer Objects (VBOs)
-	    testVBOs(); 
+	    //testVBOs(); 
 		
+		// 测试 Index Buffer Objects (IBOs)
+		testIBOs();
+	}
+
+	/**
+	 * 测试 Index Buffer Objects (IBOs)
+	 * 分别定义模型的顶点和顶点顺序，可以节省很多重复的顶点缓存（之前的定义方式）
+	 */
+	private void testIBOsInit() {
+		// TODO Auto-generated method stub
+		heightMap = new HeightMap(errorHandler);
+		
+		final String vertexShader = GLES20Utils.readTextFileFromRawResource(context,
+				R.raw.per_pixel_vertex_shader_no_tex);
+		final String fragmentShader = GLES20Utils.readTextFileFromRawResource(context,
+				R.raw.per_pixel_fragment_shader_no_tex);
+
+		final int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);
+		final int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);
+
+		programIBOs = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle, new String[] {
+				POSITION_ATTRIBUTE, NORMAL_ATTRIBUTE, COLOR_ATTRIBUTE });
+
+		// Initialize the accumulated rotation matrix
+		Matrix.setIdentityM(mAccumulatedRotation, 0);
+	}
+	
+
+	private void testIBOs() {
+		// TODO Auto-generated method stub
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+		// Set our per-vertex lighting program.
+		GLES20.glUseProgram(programIBOs);
+
+		// Set program handles for cube drawing.
+		mMVPMatrixHandle = GLES20.glGetUniformLocation(programIBOs, MVP_MATRIX_UNIFORM);
+		mMVMatrixHandle = GLES20.glGetUniformLocation(programIBOs, MV_MATRIX_UNIFORM);
+		mLightPosHandle = GLES20.glGetUniformLocation(programIBOs, LIGHT_POSITION_UNIFORM);
+		
+		mPositionHandle = GLES20.glGetAttribLocation(programIBOs, POSITION_ATTRIBUTE);
+		mNormalHandle = GLES20.glGetAttribLocation(programIBOs, NORMAL_ATTRIBUTE);
+		mColorHandle = GLES20.glGetAttribLocation(programIBOs, COLOR_ATTRIBUTE);
+
+
+		// Calculate position of the light. Push into the distance.
+		Matrix.setIdentityM(mLightModelMatrix, 0);
+		Matrix.translateM(mLightModelMatrix, 0, 0.0f, 7.5f, -8.0f);
+
+		Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
+		Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);
+
+		// Draw the heightmap.
+		// Translate the heightmap into the screen.
+		Matrix.setIdentityM(mModelMatrix, 0);
+		Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -12f);
+
+		// Set a matrix that contains the current rotation.
+		Matrix.setIdentityM(mCurrentRotation, 0);
+		Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
+		Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);
+		mDeltaX = 0.0f;
+		mDeltaY = 0.0f;
+
+		// Multiply the current rotation by the accumulated rotation, and then
+		// set the accumulated rotation to the result.
+		Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+		System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
+
+		// Rotate the cube taking the overall rotation into account.
+		Matrix.multiplyMM(mTemporaryMatrix, 0, mModelMatrix, 0, mAccumulatedRotation, 0);
+		System.arraycopy(mTemporaryMatrix, 0, mModelMatrix, 0, 16);
+
+		// This multiplies the view matrix by the model matrix, and stores
+		// the result in the MVP matrix
+		// (which currently contains model * view).
+		Matrix.multiplyMM(mMvpMatrixIBOs, 0, mViewMatrix, 0, mModelMatrix, 0);
+
+		// Pass in the modelview matrix.
+		GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMvpMatrixIBOs, 0);
+
+		// This multiplies the modelview matrix by the projection matrix,
+		// and stores the result in the MVP matrix
+		// (which now contains model * view * projection).
+		Matrix.multiplyMM(mTemporaryMatrix, 0, mProjectionMatrix, 0, mMvpMatrixIBOs, 0);
+		System.arraycopy(mTemporaryMatrix, 0, mMvpMatrixIBOs, 0, 16);
+
+		// Pass in the combined matrix.
+		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMvpMatrixIBOs, 0);
+
+		// Pass in the light position in eye space.
+		GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+
+		// Render the heightmap.
+		heightMap.render(mPositionHandle, mNormalHandle, mColorHandle);
 	}
 	
 	
-
 	/**
 	 * 之前采用的缓存方式都是在客户端内存，仅当实时渲染的时候传入GPU，这种方式适用于数据量比较小的情况，
 	 * 如果数据量比较大会对客户端即cpu和内存的使用造成额外的开销，VBO（Vertex Buffer Objects）方式

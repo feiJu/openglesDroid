@@ -42,7 +42,8 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:layout_centerHorizontal="true"
-		android:orientation="horizontal">
+		android:orientation="horizontal"
+		android:visibility="gone">
 		<Button
 			android:id="@+id/button_decrease_num_cubes"
 			android:layout_width="0dp"

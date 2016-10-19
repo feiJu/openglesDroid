@@ -51,10 +51,12 @@ public final class R {
     public static final class raw {
         public static final int blending_fragment=0x7f040000;
         public static final int blending_vertex=0x7f040001;
-        public static final int per_pixel_fragment_shader_tex_and_light=0x7f040002;
-        public static final int per_pixel_vertex_shader_tex_and_light=0x7f040003;
-        public static final int vbo_fragment_shader=0x7f040004;
-        public static final int vbo_vertex_shader=0x7f040005;
+        public static final int per_pixel_fragment_shader_no_tex=0x7f040002;
+        public static final int per_pixel_fragment_shader_tex_and_light=0x7f040003;
+        public static final int per_pixel_vertex_shader_no_tex=0x7f040004;
+        public static final int per_pixel_vertex_shader_tex_and_light=0x7f040005;
+        public static final int vbo_fragment_shader=0x7f040006;
+        public static final int vbo_vertex_shader=0x7f040007;
     }
     public static final class string {
         public static final int action_settings=0x7f060002;
