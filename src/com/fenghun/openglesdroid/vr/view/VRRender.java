@@ -6,7 +6,6 @@ import javax.microedition.khronos.opengles.GL10;
 import com.fenghun.openglesdroid.MainActivity;
 import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
-import com.fenghun.openglesdroid.jni.bean20.Square;
 import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
 import com.fenghun.openglesdroid.vr.beans.Rectangle;
 
@@ -15,7 +14,6 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.SystemClock;
-import android.util.Log;
 
 /**
  * VR 视图渲染
@@ -64,7 +62,7 @@ public class VRRender implements Renderer {
 
 	private int mPositionHandle = -1;
 
-	private int mColorHandle = -1;
+//	private int mColorHandle = -1;
 	
 	/** This will be used to pass in model texture coordinate information. */
 	private int mTextureCoordinateHandle=-1;
@@ -180,7 +178,7 @@ public class VRRender implements Renderer {
 				GLES20.GL_FRAGMENT_SHADER, fragmentShader);
 
 		mProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle,
-				fragmentShaderHandle, new String[] { "a_Position", "a_Color","a_TexCoordinate" });
+				fragmentShaderHandle, new String[] { "a_Position", /*"a_Color",*/"a_TexCoordinate" });
 
 		// 加载贴图数据
 		mOneFrameDataHandle = GLES20Utils.loadTexture(context, R.drawable.sea360);		
@@ -208,11 +206,11 @@ public class VRRender implements Renderer {
 			throw new RuntimeException(
 					"Could not get attrib location for a_Position");
 		}
-		mColorHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Color");
-		if (mColorHandle == -1) {
-			throw new RuntimeException(
-					"Could not get attrib location for a_Color");
-		}
+//		mColorHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Color");
+//		if (mColorHandle == -1) {
+//			throw new RuntimeException(
+//					"Could not get attrib location for a_Color");
+//		}
 		
 		mTextureCoordinateHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_TexCoordinate");
 		if (mTextureCoordinateHandle == -1) {
@@ -262,6 +260,6 @@ public class VRRender implements Renderer {
 		// shader by binding to texture unit 0.
 		GLES20.glUniform1i(mTextureUniformHandle, 0);
 		
-		rectView.render(mPositionHandle, mColorHandle,mTextureCoordinateHandle);
+		rectView.render(mPositionHandle, /*mColorHandle,*/mTextureCoordinateHandle);
 	}
 }

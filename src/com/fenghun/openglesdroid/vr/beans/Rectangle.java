@@ -30,15 +30,15 @@ public class Rectangle {
 	/** Additional constants. */
 	private  final int POSITION_DATA_SIZE_IN_ELEMENTS = 3;
 	// private static final int NORMAL_DATA_SIZE_IN_ELEMENTS = 3;
-	private  final int COLOR_DATA_SIZE_IN_ELEMENTS = 4;
+	//private  final int COLOR_DATA_SIZE_IN_ELEMENTS = 4;
 
 	// 存储顶点相关句柄
-	private final int[] vertexBufferObjs = new int[3];
+	private final int[] vertexBufferObjs = new int[2];
 	// 存储顶点顺序相关句柄
 	private final int[] indexBufferObj = new int[1];
 
 	private int vertexCoordinatesIndex = 0;
-	private int vertexColorsIndex = 0;
+	//private int vertexColorsIndex = 0;
 	private int vertexTextureCoordinatesIndex= 0;
 	private int indicesCoordinatesIndex = 0;
 	
@@ -53,11 +53,11 @@ public class Rectangle {
 	};
 
 	// R, G, B, A
-	private float verticesColors[] = { 1.0f, 0.0f, 0.0f, 1.0f, // 0
-			0.0f, 0.0f, 1.0f, 1.0f, // 1
-			0.0f, 1.0f, 0.0f, 1.0f, // 2
-			1.0f, 1.0f, 0.0f, 1.0f // 3
-	};
+//	private float verticesColors[] = { 1.0f, 0.0f, 0.0f, 1.0f, // 0
+//			0.0f, 0.0f, 1.0f, 1.0f, // 1
+//			0.0f, 1.0f, 0.0f, 1.0f, // 2
+//			1.0f, 1.0f, 0.0f, 1.0f // 3
+//	};
 
 	/**
 	 * 定义面的顶点的顺序很重要 在拼接曲面的时候，用来定义面的顶点的顺序非常重要，
@@ -79,8 +79,8 @@ public class Rectangle {
 		try {
 			float ratio = screenWidth / screenHeight > 1 ? screenWidth
 					/ screenHeight : screenHeight / screenWidth;
-			verticesCoordinates = new float[] { -ratio, 1.0f, 0.0f, // 0, Top
-																	// Left
+			verticesCoordinates = new float[] { 
+					-ratio, 1.0f, 0.0f, // 0, Top Left
 					-ratio, -1.0f, 0.0f, // 1, Bottom Left
 					ratio, -1.0f, 0.0f, // 2, Bottom Right
 					ratio, 1.0f, 0.0f // 3, Top Right
@@ -90,8 +90,8 @@ public class Rectangle {
 			// 位置坐标缓存
 			final FloatBuffer rectCoordinatesBuffer = GLES20Utils
 					.allocateFloatBuffer(verticesCoordinates);
-			final FloatBuffer rectColorBuffer = GLES20Utils
-					.allocateFloatBuffer(verticesColors);
+//			final FloatBuffer rectColorBuffer = GLES20Utils
+//					.allocateFloatBuffer(verticesColors);
 			final FloatBuffer rectTextureCoordinatesBuffer = GLES20Utils
 					.allocateFloatBuffer(rectTextureCoordinateData);
 			final ShortBuffer rectIndicesBuffer = GLES20Utils
@@ -101,27 +101,24 @@ public class Rectangle {
 			// Second, copy these buffers into OpenGL's memory. After, we don't
 			// need
 			// to keep the client-side buffers around.
-			// final int buffers[] = new int[3];
-			// GLES20.glGenBuffers(3, buffers, 0);
 			// 初始化内存句柄
-			GLES20.glGenBuffers(3, vertexBufferObjs, 0);
+			GLES20.glGenBuffers(vertexBufferObjs.length, vertexBufferObjs, 0);
 			GLES20.glGenBuffers(1, indexBufferObj, 0);
 
-			if (vertexBufferObjs[0] > 0 && vertexBufferObjs[1] > 0
-					&& vertexBufferObjs[2] > 0 && indexBufferObj[0] > 0) {
+			if (vertexBufferObjs[0] > 0 && vertexBufferObjs[1] > 0 && indexBufferObj[0] > 0) {
 				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[0]); // 绑定句柄
 				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
 						rectCoordinatesBuffer.capacity()
 								* GLES20Utils.BYTES_PER_FLOAT,
 						rectCoordinatesBuffer, GLES20.GL_STATIC_DRAW); // 顶点坐标传入GPU缓存
 
-				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[1]); // 绑定句柄
-				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
-						rectColorBuffer.capacity()
-								* GLES20Utils.BYTES_PER_FLOAT, rectColorBuffer,
-						GLES20.GL_STATIC_DRAW); // 顶点颜色坐标传入GPU缓存
+//				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[1]); // 绑定句柄
+//				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
+//						rectColorBuffer.capacity()
+//								* GLES20Utils.BYTES_PER_FLOAT, rectColorBuffer,
+//						GLES20.GL_STATIC_DRAW); // 顶点颜色坐标传入GPU缓存
 
-				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[2]); // 绑定句柄
+				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[1]); // 绑定句柄
 				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
 						rectTextureCoordinatesBuffer.capacity()
 								* GLES20Utils.BYTES_PER_FLOAT, rectTextureCoordinatesBuffer,
@@ -138,8 +135,8 @@ public class Rectangle {
 				GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
 				
 				vertexCoordinatesIndex = vertexBufferObjs[0];
-				vertexColorsIndex = vertexBufferObjs[1];
-				vertexTextureCoordinatesIndex = vertexBufferObjs[2];
+				//vertexColorsIndex = vertexBufferObjs[1];
+				vertexTextureCoordinatesIndex = vertexBufferObjs[1];
 				indicesCoordinatesIndex = indexBufferObj[0];
 				
 			} else {
@@ -153,7 +150,7 @@ public class Rectangle {
 		}
 	}
 
-	public void render(int mPositionAttributeHandle, int mColorAttributeHandle,int mTextureCoordinateHandle) {
+	public void render(int mPositionAttributeHandle, /*int mColorAttributeHandle,*/int mTextureCoordinateHandle) {
 		if (vertexBufferObjs[0] > 0 && indexBufferObj[0] > 0) {
 			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexCoordinatesIndex); // 绑定句柄
 			GLES20.glEnableVertexAttribArray(mPositionAttributeHandle); // 开启顶点位置属性传入
@@ -161,11 +158,10 @@ public class Rectangle {
 					POSITION_DATA_SIZE_IN_ELEMENTS, GLES20.GL_FLOAT, false, 0,
 					0);
 			
-
-			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexColorsIndex); // 绑定句柄
-			GLES20.glEnableVertexAttribArray(mColorAttributeHandle);
-			GLES20.glVertexAttribPointer(mColorAttributeHandle,
-					COLOR_DATA_SIZE_IN_ELEMENTS, GLES20.GL_FLOAT, false, 0, 0);
+//			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexColorsIndex); // 绑定句柄
+//			GLES20.glEnableVertexAttribArray(mColorAttributeHandle);
+//			GLES20.glVertexAttribPointer(mColorAttributeHandle,
+//					COLOR_DATA_SIZE_IN_ELEMENTS, GLES20.GL_FLOAT, false, 0, 0);
 			
 
 			// Pass in the texture information
@@ -181,7 +177,7 @@ public class Rectangle {
 					indicesCoordinates.length, GLES20.GL_UNSIGNED_SHORT, 0);
 
 			GLES20.glDisableVertexAttribArray(mPositionAttributeHandle); // 关闭顶点位置属性传入
-			GLES20.glDisableVertexAttribArray(mColorAttributeHandle); // 关闭顶点位置属性传入
+//			GLES20.glDisableVertexAttribArray(mColorAttributeHandle); // 关闭顶点位置属性传入
 			GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle); // 关闭顶点位置属性传入
 			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
