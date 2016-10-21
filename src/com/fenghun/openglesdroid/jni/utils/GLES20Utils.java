@@ -4,6 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,6 +20,11 @@ public class GLES20Utils {
 
 	private static String TAG = "GLES20Utils";
 
+	/** How many bytes per float. */
+	public static final int BYTES_PER_FLOAT = 4;
+	/** How many bytes per int. */
+	public static final int BYTES_PER_SHORT = 2;
+
 	/**
 	 * read in the shader from a text file in the raw resources folder
 	 * 
@@ -24,33 +33,29 @@ public class GLES20Utils {
 	 * @return
 	 */
 	public static String readTextFileFromRawResource(final Context context,
-            final int resourceId){
-        final InputStream inputStream = context.getResources().openRawResource(
-                resourceId);
-        final InputStreamReader inputStreamReader = new InputStreamReader(
-                inputStream);
-        final BufferedReader bufferedReader = new BufferedReader(
-                inputStreamReader);
- 
-        String nextLine;
-        final StringBuilder body = new StringBuilder();
- 
-        try
-        {
-            while ((nextLine = bufferedReader.readLine()) != null)
-            {
-                body.append(nextLine);
-                body.append('\n');
-            }
-        }
-        catch (IOException e)
-        {
-            return null;
-        }
- 
-        return body.toString();
-    }
-	
+			final int resourceId) {
+		final InputStream inputStream = context.getResources().openRawResource(
+				resourceId);
+		final InputStreamReader inputStreamReader = new InputStreamReader(
+				inputStream);
+		final BufferedReader bufferedReader = new BufferedReader(
+				inputStreamReader);
+
+		String nextLine;
+		final StringBuilder body = new StringBuilder();
+
+		try {
+			while ((nextLine = bufferedReader.readLine()) != null) {
+				body.append(nextLine);
+				body.append('\n');
+			}
+		} catch (IOException e) {
+			return null;
+		}
+
+		return body.toString();
+	}
+
 	/**
 	 * 加载贴图材质
 	 * 
@@ -58,47 +63,50 @@ public class GLES20Utils {
 	 * @param resourceId
 	 * @return
 	 */
-	public static int loadTexture(final Context context, final int resourceId)
-	{
-		
-		//  create a new handle for us. This handle serves as a unique identifier, 
-		// and we use it whenever we want to refer to the same texture in OpenGL.
-	    final int[] textureHandle = new int[1];
-	    GLES20.glGenTextures(1, textureHandle, 0);
-	 
-	    if (textureHandle[0] != 0)
-	    {
-	        final BitmapFactory.Options options = new BitmapFactory.Options();
-	        options.inScaled = false;   // No pre-scaling
-	 
-	        // Read in the resource
-	        final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
-	 
-	        // Bind to the texture in OpenGL
-	        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
-	 
-	        // Set filtering
-	        // This tells OpenGL what type of filtering to apply when drawing the texture smaller than the original size in pixels.
-	        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-	        // This tells OpenGL what type of filtering to apply when magnifying the texture beyond its original size in pixels.
-	        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-	 
-	        // Load the bitmap into the bound texture.
-	        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-	 
-	        // Recycle the bitmap, since its data has been loaded into OpenGL.
-	        bitmap.recycle();
-	    }
-	 
-	    if (textureHandle[0] == 0)
-	    {
-	        throw new RuntimeException("Error loading texture.");
-	    }
-	 
-	    return textureHandle[0];
+	public static int loadTexture(final Context context, final int resourceId) {
+
+		// create a new handle for us. This handle serves as a unique
+		// identifier,
+		// and we use it whenever we want to refer to the same texture in
+		// OpenGL.
+		final int[] textureHandle = new int[1];
+		GLES20.glGenTextures(1, textureHandle, 0);
+
+		if (textureHandle[0] != 0) {
+			final BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inScaled = false; // No pre-scaling
+
+			// Read in the resource
+			final Bitmap bitmap = BitmapFactory.decodeResource(
+					context.getResources(), resourceId, options);
+
+			// Bind to the texture in OpenGL
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
+
+			// Set filtering
+			// This tells OpenGL what type of filtering to apply when drawing
+			// the texture smaller than the original size in pixels.
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+					GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+			// This tells OpenGL what type of filtering to apply when magnifying
+			// the texture beyond its original size in pixels.
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+					GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+
+			// Load the bitmap into the bound texture.
+			GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+
+			// Recycle the bitmap, since its data has been loaded into OpenGL.
+			bitmap.recycle();
+		}
+
+		if (textureHandle[0] == 0) {
+			throw new RuntimeException("Error loading texture.");
+		}
+
+		return textureHandle[0];
 	}
-	
-	
+
 	/**
 	 * Helper function to compile and link a program.
 	 * 
@@ -228,20 +236,15 @@ public class GLES20Utils {
 	 * @param elementsPerPoint
 	 * @return
 	 */
-	public static float[] generateCubeData(float[] point1,
-			float[] point2,
-			float[] point3,
-			float[] point4,
-			float[] point5,
-			float[] point6,
-			float[] point7,
-			float[] point8,
-			int elementsPerPoint)
-	{
+	public static float[] generateCubeData(float[] point1, float[] point2,
+			float[] point3, float[] point4, float[] point5, float[] point6,
+			float[] point7, float[] point8, int elementsPerPoint) {
 		// Given a cube with the points defined as follows:
-		// front left top, front right top, front left bottom, front right bottom,
-		// back left top, back right top, back left bottom, back right bottom,		
-		// return an array of 6 sides, 2 triangles per side, 3 vertices per triangle, and 4 floats per vertex.
+		// front left top, front right top, front left bottom, front right
+		// bottom,
+		// back left top, back right top, back left bottom, back right bottom,
+		// return an array of 6 sides, 2 triangles per side, 3 vertices per
+		// triangle, and 4 floats per vertex.
 		final int FRONT = 0;
 		final int RIGHT = 1;
 		final int BACK = 2;
@@ -250,58 +253,116 @@ public class GLES20Utils {
 		final int BOTTOM = 5;
 
 		final int size = elementsPerPoint * 6 * 6;
-		final float[] cubeData = new float[size];		
+		final float[] cubeData = new float[size];
 
-		for (int face = 0; face < 6; face ++)
-		{
-			// Relative to the side, p1 = top left, p2 = top right, p3 = bottom left, p4 = bottom right
+		for (int face = 0; face < 6; face++) {
+			// Relative to the side, p1 = top left, p2 = top right, p3 = bottom
+			// left, p4 = bottom right
 			final float[] p1, p2, p3, p4;
 
 			// Select the points for this face
-			if (face == FRONT)
+			if (face == FRONT) {
+				p1 = point1;
+				p2 = point2;
+				p3 = point3;
+				p4 = point4;
+			} else if (face == RIGHT) {
+				p1 = point2;
+				p2 = point6;
+				p3 = point4;
+				p4 = point8;
+			} else if (face == BACK) {
+				p1 = point6;
+				p2 = point5;
+				p3 = point8;
+				p4 = point7;
+			} else if (face == LEFT) {
+				p1 = point5;
+				p2 = point1;
+				p3 = point7;
+				p4 = point3;
+			} else if (face == TOP) {
+				p1 = point5;
+				p2 = point6;
+				p3 = point1;
+				p4 = point2;
+			} else // if (side == BOTTOM)
 			{
-				p1 = point1; p2 = point2; p3 = point3; p4 = point4; 
+				p1 = point8;
+				p2 = point7;
+				p3 = point4;
+				p4 = point3;
 			}
-			else if (face == RIGHT)
-			{
-				p1 = point2; p2 = point6; p3 = point4; p4 = point8;
-			}
-			else if (face == BACK)
-			{
-				p1 = point6; p2 = point5; p3 = point8; p4 = point7;
-			}
-			else if (face == LEFT)
-			{
-				p1 = point5; p2 = point1; p3 = point7; p4 = point3;
-			}
-			else if (face == TOP)
-			{
-				p1 = point5; p2 = point6; p3 = point1; p4 = point2;
-			}
-			else // if (side == BOTTOM)
-			{
-				p1 = point8; p2 = point7; p3 = point4; p4 = point3;								
-			}
-			
-			// In OpenGL counter-clockwise winding is default. This means that when we look at a triangle, 
-			// if the points are counter-clockwise we are looking at the "front". If not we are looking at
-			// the back. OpenGL has an optimization where all back-facing triangles are culled, since they
-			// usually represent the backside of an object and aren't visible anyways.
+
+			// In OpenGL counter-clockwise winding is default. This means that
+			// when we look at a triangle,
+			// if the points are counter-clockwise we are looking at the
+			// "front". If not we are looking at
+			// the back. OpenGL has an optimization where all back-facing
+			// triangles are culled, since they
+			// usually represent the backside of an object and aren't visible
+			// anyways.
 
 			// Build the triangles
-			//  1---3,6
-			//  | / |
+			// 1---3,6
+			// | / |
 			// 2,4--5
 			int offset = face * elementsPerPoint * 6;
 
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p1[i]; }
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p3[i]; }
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p2[i]; }
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p3[i]; }
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p4[i]; }
-			for (int i = 0; i < elementsPerPoint; i++) { cubeData[offset++] = p2[i]; }
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p1[i];
+			}
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p3[i];
+			}
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p2[i];
+			}
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p3[i];
+			}
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p4[i];
+			}
+			for (int i = 0; i < elementsPerPoint; i++) {
+				cubeData[offset++] = p2[i];
+			}
 		}
 
 		return cubeData;
+	}
+
+	/**
+	 * 
+	 * 分配浮点数内存
+	 * 
+	 * @param floatData
+	 * @return
+	 */
+	public static FloatBuffer allocateFloatBuffer(float[] floatData) {
+		// TODO Auto-generated method stub
+		final FloatBuffer floatBuffer = ByteBuffer
+				.allocateDirect(floatData.length * BYTES_PER_FLOAT)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		floatBuffer.put(floatData);
+		floatBuffer.position(0);
+		return floatBuffer;
+	}
+
+	/**
+	 * 
+	 * 分配短整型内存
+	 * 
+	 * @param indicesCoordinates
+	 * @return
+	 */
+	public static ShortBuffer allocateShortBuffer(short[] shortData) {
+		// TODO Auto-generated method stub
+		final ShortBuffer shortBuffer = ByteBuffer
+				.allocateDirect(shortData.length * BYTES_PER_SHORT)
+				.order(ByteOrder.nativeOrder()).asShortBuffer();
+		shortBuffer.put(shortData);
+		shortBuffer.position(0);
+		return shortBuffer;
 	}
 }

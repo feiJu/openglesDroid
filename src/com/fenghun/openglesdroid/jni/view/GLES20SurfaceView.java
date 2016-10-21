@@ -19,6 +19,8 @@ import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
 import com.fenghun.openglesdroid.jni.bean20.HeightMap;
 import com.fenghun.openglesdroid.jni.bean20.Plane;
 import com.fenghun.openglesdroid.jni.bean20.Point;
+import com.fenghun.openglesdroid.jni.bean20.Square;
+import com.fenghun.openglesdroid.jni.bean20.Triangle;
 import com.fenghun.openglesdroid.jni.bean20.TriangleTest;
 import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
 
@@ -60,11 +62,11 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 
 	private Context context;
 	
-	//private Triangle mTriangle;
+	private Triangle mTriangle;
 
-	//private Square square;
+	private Square square;
 	
-	//private TriangleTest triangleTest;
+	private TriangleTest triangleTest;
 	
 	private Cube cube;
 	
@@ -291,23 +293,13 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
 	    Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
 		
-		// 初始化一个三角形
-//		mTriangle = new Triangle();
-//		int vertexShader = mTriangle.getVertexShader();
-//		int fragmentShader = mTriangle.getFragmentShader();
 		
-		// 初始化一个正方形
-//		square = new Square();
-//		int vertexShader = square.getVertexShader();
-//		int fragmentShader = square.getFragmentShader();
-		
-	    // 
-//	    triangleTest = new TriangleTest();
-//	    String vertexShader = triangleTest.getVertexShader();
-//	    String fragmentShader = triangleTest.getFragmentShader();
-	   
+	    // 测试基本图形
+	    testBaseShapesInit();
+	    
+	    
 	    // 测试光照，贴图等
-	    // testCubesInit();
+	    //testCubesInit();
 		
 	    // 测试texture filter
 	    //testTextureFilterInit();
@@ -316,9 +308,11 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    //testVBOsInit();
 	   
 	    // 测试 Index Buffer Objects (IBOs)
-	    testIBOsInit();
+	    //testIBOsInit();
 	    
 	}
+
+	
 
 	@Override
 	public void onSurfaceChanged(GL10 glUnused, int width, int height) {
@@ -338,7 +332,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    final float bottom = -1.0f;
 	    final float top = 1.0f;
 	    final float near = 1.0f;
-	    final float far = 1000.0f;
+	    final float far = 10.0f;
 	 
 	    Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
 	}
@@ -350,7 +344,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// 重绘背景色
 		//GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 		
-		//testTriangles(triangleTest);	
+		testTriangles(triangleTest);	
 		 
 		// 测试光照，贴图等
 		//testCubes(cube);
@@ -362,7 +356,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    //testVBOs(); 
 		
 		// 测试 Index Buffer Objects (IBOs)
-		testIBOs();
+		//testIBOs();
 	}
 
 	/**
@@ -505,6 +499,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         mMVMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVMatrix"); 
         mLightPosHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_LightPos");
         mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Texture");
+        
         mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Position");        
         mNormalHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Normal"); 
         mTextureCoordinateHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_TexCoordinate");
@@ -887,6 +882,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
          */
         Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);//模型坐标转为世界坐标
         Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);  	// 世界坐标转为屏幕3D坐标
+      
         
         // Draw some cubes.   
         /**
@@ -947,6 +943,86 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	
 	
 	
+	private void testBaseShapesInit() {
+		// TODO Auto-generated method stub
+		// 初始化一个三角形
+//		mTriangle = new Triangle();
+//		int vertexShader = mTriangle.getVertexShader();
+//		int fragmentShader = mTriangle.getFragmentShader();
+		
+		// 初始化一个正方形
+		square = new Square();
+		int vertexShaderHandle = square.getVertexShader();
+		int fragmentShaderHandle = square.getFragmentShader();
+		
+	    // 
+//	    triangleTest = new TriangleTest();
+//	    String vertexShader = triangleTest.getVertexShader();
+//	    String fragmentShader = triangleTest.getFragmentShader();
+//		
+//	    int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);
+//	    int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);
+	    
+		/**
+		 * 一旦应用程序已经创建了顶点、片段着色器对象，它需要去创建项目对象，项目是最终的链接对象，
+		 * 每个着色器在被绘制前都应该联系到项目或者项目对象。
+		 * 
+		 * 源码输入着色器对象，着色器对象被编辑为目标格式（.obj 文件）。完成后着色器对象能够链接到项目对象上，一个项目可以有多个着色器
+		 * 
+		 * OpenGL ES 中一个项目中有一个顶点着色器和一个片段着色器（不能多不能少），然后链接成可执行文件，最后能用来渲染。
+		 * 
+		 */
+		mProgram = GLES20.glCreateProgram(); // 创建一个空的OpenGL ES Program
+
+		GLES20.glAttachShader(mProgram, vertexShaderHandle); // 将顶点着色器添加到program
+		GLES20.glAttachShader(mProgram, fragmentShaderHandle); // 将片段着色器添加到program
+
+		/**
+		 * 两个着色器被链接后，下一步应用设定顶点着色器 vPosition 属性
+		 * // Bind vPosition to attribute 0
+		 * glBindAttribLocation(programObject, 0, "vPosition");
+		 * glBindAttribLocation 函数绑定 vPosition 属性到顶点着色器位置 0，当我们指定顶点数据后，位置指针指向下一个位置。
+		 */
+		// Bind attributes
+	    GLES20.glBindAttribLocation(mProgram, 0, "a_Position");
+	    GLES20.glBindAttribLocation(mProgram, 1, "a_Color");
+		
+		GLES20.glLinkProgram(mProgram); // 链接项目
+		// 检查项目链接错误
+		int[] linkStatus = new int[1];
+		GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
+		if (linkStatus[0] != GLES20.GL_TRUE) {
+			Log.e(TAG, "Could not link program: ");
+			Log.e(TAG, GLES20.glGetProgramInfoLog(mProgram));
+			GLES20.glDeleteProgram(mProgram);
+			mProgram = 0;
+		}
+		
+		
+//		
+//		 // Set program handles. These will later be used to pass in values to the program.
+//	    mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
+//	    if (mMVPMatrixHandle == -1) {
+//			throw new RuntimeException(
+//					"Could not get attrib location for mMVPMatrixHandle");
+//		}
+//	  
+//		// 获取指向vertex shader的成员vPosition的 handle,（这里直接获取的返回值为glBindAttribLocation中的第二个参数,
+//		//并完成glBindAttribLocation操作） 
+//		mPositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
+//		if (mPositionHandle == -1) {
+//			throw new RuntimeException(
+//					"Could not get attrib location for mPositionHandle");
+//		}
+//
+//		// 获取指向fragment shader的成员vColor的handle
+//		mColorHandle = GLES20.glGetAttribLocation(mProgram, "a_Color");
+//		if (mColorHandle == -1) {
+//			throw new RuntimeException(
+//					"Could not get attrib location for mColorHandle");
+//		}
+	}
+	
 	/**
 	 * 
 	 * 测试时绘制三角形
@@ -967,31 +1043,31 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		GLES20Utils.checkGlError(TAG, "glUseProgram");
 		
 		//mTriangle.draw(mProgram, mPositionHandle, mColorHandle); // 绘制三角形
-		//square.draw(mProgram, mPositionHandle, mColorHandle); // 绘制三角形
+		square.draw(mProgram); // 绘制三角形
 	
 		// Draw the triangle facing straight on.
-        Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
-        triangleTest.drawTriangle(triangleTest.getmTriangle1Vertices(), mPositionHandle, mColorHandle, 
-        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
-	
-        
-        // Draw one translated a bit down and rotated to be flat on the ground.
-        Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 0.0f, -1.0f, 0.0f);
-        Matrix.rotateM(mModelMatrix, 0, 90.0f, 1.0f, 0.0f, 0.0f);
-        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);        
-        triangleTest.drawTriangle(triangleTest.getmTriangle2Vertices(), mPositionHandle, mColorHandle, 
-        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
-    	
-        // Draw one translated a bit to the right and rotated to be facing to the left.
-        Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 1.0f, 0.0f, 0.0f);
-        Matrix.rotateM(mModelMatrix, 0, 90.0f, 0.0f, 1.0f, 0.0f);
-        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
-        triangleTest.drawTriangle(triangleTest.getmTriangle3Vertices(), mPositionHandle, mColorHandle, 
-        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
-    	
+//        Matrix.setIdentityM(mModelMatrix, 0);
+//        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+//        triangleTest.drawTriangle(triangleTest.getmTriangle1Vertices(), mPositionHandle, mColorHandle, 
+//        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+//	
+//        
+//        // Draw one translated a bit down and rotated to be flat on the ground.
+//        Matrix.setIdentityM(mModelMatrix, 0);
+//        Matrix.translateM(mModelMatrix, 0, 0.0f, -1.0f, 0.0f);
+//        Matrix.rotateM(mModelMatrix, 0, 90.0f, 1.0f, 0.0f, 0.0f);
+//        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);        
+//        triangleTest.drawTriangle(triangleTest.getmTriangle2Vertices(), mPositionHandle, mColorHandle, 
+//        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+//    	
+//        // Draw one translated a bit to the right and rotated to be facing to the left.
+//        Matrix.setIdentityM(mModelMatrix, 0);
+//        Matrix.translateM(mModelMatrix, 0, 1.0f, 0.0f, 0.0f);
+//        Matrix.rotateM(mModelMatrix, 0, 90.0f, 0.0f, 1.0f, 0.0f);
+//        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+//        triangleTest.drawTriangle(triangleTest.getmTriangle3Vertices(), mPositionHandle, mColorHandle, 
+//        		mViewMatrix, mModelMatrix, mProjectionMatrix, mMVPMatrixHandle);
+//    	
         angleInDegrees++;
         angleInDegrees = angleInDegrees % 360;
 	}

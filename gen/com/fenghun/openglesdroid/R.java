@@ -29,8 +29,9 @@ public final class R {
         public static final int bumpy_bricks_public_domain=0x7f020000;
         public static final int ic_launcher=0x7f020001;
         public static final int noisy_grass_public_domain=0x7f020002;
-        public static final int stone_wall_public_domain=0x7f020003;
-        public static final int usb_android=0x7f020004;
+        public static final int sea360=0x7f020003;
+        public static final int stone_wall_public_domain=0x7f020004;
+        public static final int usb_android=0x7f020005;
     }
     public static final class id {
         public static final int action_settings=0x7f0a0007;
@@ -55,8 +56,10 @@ public final class R {
         public static final int per_pixel_fragment_shader_tex_and_light=0x7f040003;
         public static final int per_pixel_vertex_shader_no_tex=0x7f040004;
         public static final int per_pixel_vertex_shader_tex_and_light=0x7f040005;
-        public static final int vbo_fragment_shader=0x7f040006;
-        public static final int vbo_vertex_shader=0x7f040007;
+        public static final int rect_view_fragment_shader=0x7f040006;
+        public static final int rect_view_vertex_shader=0x7f040007;
+        public static final int vbo_fragment_shader=0x7f040008;
+        public static final int vbo_vertex_shader=0x7f040009;
     }
     public static final class string {
         public static final int action_settings=0x7f060002;

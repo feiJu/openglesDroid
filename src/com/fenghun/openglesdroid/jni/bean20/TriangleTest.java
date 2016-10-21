@@ -175,6 +175,8 @@ public class TriangleTest {
 		Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
 
 		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
+		
+		
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
 	}
 

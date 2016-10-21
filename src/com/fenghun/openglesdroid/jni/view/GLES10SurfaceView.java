@@ -138,7 +138,7 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// TODO Auto-generated method stub
 		Log.d(TAG,
 				"----- onSurfaceChanged(GL10 gl, int width, int height) is called!");
-		MyOpenglES.onSurfaceChanged(width, height);
+		//MyOpenglES.onSurfaceChanged(width, height);
 		// Sets the current view port to the new size.
 		gl.glViewport(0, 0, width, height);// OpenGL docs.
 
@@ -181,7 +181,7 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// OpenGL ES从当前位置开始渲染，缺省坐标为(0,0,0)，和View port 的坐标一样，
 		// 相当于把画面放在眼前，对应这种情况OpenGL不会渲染离view Port很近的画面，
 		// 因此我们需要将画面向后退一点距离
-		//gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
+		gl.glTranslatef(0, 0, -4); // 平移变换，向z轴负方向移动4个单位
 
 		// 绘制2D基本图形
 		// base2DGraphics.drawPoints(gl); // 绘制点
@@ -200,14 +200,14 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		
 		
 		// 绘制正方形
-		 drawTestRects(gl);
+		// drawTestRects(gl);
 
 		// 绘制旋转的立方体
 		// if(cube != null) drawCube(gl);
 
 		// 绘制包含材质的简单平面
-		// if (sp != null)
-		// sp.draw(gl);
+		 if (sp != null)
+		 sp.draw(gl);
 
 	}
 

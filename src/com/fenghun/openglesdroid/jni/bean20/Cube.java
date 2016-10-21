@@ -459,6 +459,7 @@ public class Cube {
 		+"varying vec3 v_Position; 		\n"      // This will be passed into the fragment shader.
 		+"varying vec4 v_Color;     	\n"     // This will be passed into the fragment shader.
 		+"varying vec3 v_Normal;    	\n"     // This will be passed into the fragment shader.
+		
 		+"attribute vec2 a_TexCoordinate;	\n"	 // Per-vertex texture coordinate information we will pass in. 
 		+"varying vec2 v_TexCoordinate;   	\n"	// This will be passed into the fragment shader.
 		
@@ -502,6 +503,16 @@ public class Cube {
 			// Get a lighting direction vector from the light to the vertex.
 		+"	vec3 lightVector = normalize(u_LightPos - v_Position);    			\n"
 			
+		
+		
+//		+"float diffuse;														\n"
+//
+//		+"if (gl_FrontFacing) {													\n"
+//		+"	diffuse = max(dot(v_Normal, lightVector), 0.0);						\n"
+//		+"} else {																\n"
+//		+"	diffuse = max(dot(-v_Normal, lightVector), 0.0);\n"
+//		+"}     																\n"
+		
 			// Calculate the dot product of the light vector and vertex normal. If the normal and light vector are
 			// pointing in the same direction then it will get max illumination.
 		+"	float diffuse = max(dot(v_Normal, lightVector), 0.1);    			\n"

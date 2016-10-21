@@ -122,7 +122,7 @@ public class Square {
      * @param mPositionHandle 
      * @param mProgram 
      */
-    public void draw(int mProgram, int mPositionHandle, int mColorHandle){
+    public void draw(int mProgram){
     	
     	GLES20.glFrontFace(GLES20.GL_CCW);	// 设置逆时针方法为面的“前面”：
 		
@@ -130,6 +130,21 @@ public class Square {
 		
 		GLES20.glCullFace(GLES20.GL_BACK);	// 明确指明“忽略“哪个面的代码如下：
     	
+		
+	    int mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+	    if (mColorHandle == -1) {
+			throw new RuntimeException(
+					"Could not get attrib location for vColor");
+		}
+	  
+		// 获取指向vertex shader的成员vPosition的 handle,（这里直接获取的返回值为glBindAttribLocation中的第二个参数,
+		//并完成glBindAttribLocation操作） 
+		int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+		if (mPositionHandle == -1) {
+			throw new RuntimeException(
+					"Could not get attrib location for vPosition");
+		}
+		
 		
 	    // 启用一个指向三角形的顶点数组的handle
 	    GLES20.glEnableVertexAttribArray(mPositionHandle);
