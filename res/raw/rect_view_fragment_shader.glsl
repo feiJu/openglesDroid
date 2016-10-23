@@ -4,8 +4,6 @@ precision mediump float;       	// Set the default precision to medium. We don't
   								// triangle per fragment.
 varying vec2 v_TexCoordinate;   // Interpolated texture coordinate per fragment.
 
-
-
 uniform sampler2D u_Texture;    // The input texture.
 
 
