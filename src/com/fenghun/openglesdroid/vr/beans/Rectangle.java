@@ -65,7 +65,7 @@ public class Rectangle {
 	 * 只绘制面的“前面”。虽然“前面”“后面”的定义可以应人而易，但一般为所有的“前面”定义统一的顶点顺序(顺时针或是逆时针方向）。
 	 */
 	// The order we like to connect them.
-	private short[] indicesCoordinates = { 0, 1, 2, 2, 3, 0 }; // 顶点坐标绘制的顺序，
+	private short[] indicesCoordinates = { 0, 1, 2, 0, 2, 3}; // 顶点坐标绘制的顺序，
 
 	final float[] rectTextureCoordinateData = { 0.0f, 0.0f, // 0
 			0.0f, 1.0f, // 1

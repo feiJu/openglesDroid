@@ -2,6 +2,8 @@ package com.fenghun.openglesdroid.jni.bean;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.opengl.GLES20;
+
 /**
  * 
  * 立方体，为简单起见，这个四面体只可以设置宽度，高度，和深度，没有和Plane一样提供Segments支持。
@@ -73,10 +75,14 @@ public class Cube extends Mesh {
 				
 				
 		};
-		// 这个坐标的顺序也是对的，在绘制的时候
+		// "这个坐标的顺序也是对的，在绘制的时候
 		// gl.glEnable(GL10.GL_CULL_FACE);
 		// gl.glCullFace(GL10.GL_BACK);会忽略掉后面
-		// 所以有花不全的情况
+		// 所以有花不全的情况，"以上内容理解有误，
+		// 绘制的顺序与这个GLES20.glFrontFace(GLES20.GL_CCW);	// 逆时针
+		// 属性有关，顶点顺序（逆时针或者顺时针）不同，效果也会不同。
+		// 
+		
 //		 short indices[] = { 0, 4, 5,
 //		
 //		 0, 5, 1,

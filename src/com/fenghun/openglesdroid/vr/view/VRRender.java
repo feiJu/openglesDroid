@@ -170,7 +170,7 @@ public class VRRender implements Renderer {
 		final String vertexShader = GLES20Utils.readTextFileFromRawResource(
 				context, R.raw.rect_view_vertex_shader);
 		final String fragmentShader = GLES20Utils.readTextFileFromRawResource(
-				context, R.raw.rect_view_distortion_fragment_shader);
+				context, R.raw.rect_view_fragment_shader);
 
 		final int vertexShaderHandle = GLES20Utils.loadShader(
 				GLES20.GL_VERTEX_SHADER, vertexShader);

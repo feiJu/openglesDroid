@@ -3,6 +3,7 @@ package com.fenghun.openglesdroid;
 import com.fenghun.openglesdroid.jni.MyOpenglES;
 import com.fenghun.openglesdroid.jni.view.GLES10SurfaceView;
 import com.fenghun.openglesdroid.jni.view.GLES20SurfaceView;
+import com.fenghun.openglesdroid.jni.view.MySurfaceView;
 import com.fenghun.openglesdroid.vr.view.VRRender;
 import com.fenghun.openglesdroid.vr.view.VRSurfaceView;
 
@@ -66,14 +67,18 @@ public class MainActivity extends Activity {
 		final DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		
-//		 surfaceView = new GLES20SurfaceView(this,displayMetrics.density);
-//		// GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
-//		 surfaceViewFL.addView(surfaceView);
-		screenWidth = displayMetrics.widthPixels;
-		screenHeight = displayMetrics.heightPixels;
-		surfaceViewVR = new VRSurfaceView(this,displayMetrics.density);
-		surfaceViewFL.addView(surfaceViewVR);
+		// surfaceView = new GLES20SurfaceView(this,displayMetrics.density);
+		// GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
+		// surfaceViewFL.addView(surfaceView);
+		
+//		screenWidth = displayMetrics.widthPixels;
+//		screenHeight = displayMetrics.heightPixels;
+//		surfaceViewVR = new VRSurfaceView(this,displayMetrics.density);
+//		surfaceViewFL.addView(surfaceViewVR);
 
+		MySurfaceView mySurfaceview = new MySurfaceView(this);
+		surfaceViewFL.addView(mySurfaceview);
+//		
 		MyOpenglES.test();
 	}
 
@@ -81,14 +86,14 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-		surfaceViewVR.onResume();
+		if(surfaceViewVR != null)surfaceViewVR.onResume();
 	}
 	
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		super.onPause();
-		surfaceViewVR.onPause();
+		if(surfaceViewVR !=null)surfaceViewVR.onPause();
 	}
 	
 	
