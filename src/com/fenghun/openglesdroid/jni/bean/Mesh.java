@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLUtils;
 
 /**
+ * opengl es 1.0 
  * 
  * 基类 Mesh,所有空间形体最基本的构成元素为Mesh（三角形网格）
  * 

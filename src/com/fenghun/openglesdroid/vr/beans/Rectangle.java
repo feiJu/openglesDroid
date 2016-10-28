@@ -1,16 +1,13 @@
 package com.fenghun.openglesdroid.vr.beans;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-
+import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
-import com.fenghun.openglesdroid.jni.bean20.HeightMap;
 import com.fenghun.openglesdroid.jni.bean20.ErrorHandler.ErrorType;
-import com.fenghun.openglesdroid.jni.utils.GLES20Utils;
 
+import android.content.Context;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -20,44 +17,26 @@ import android.util.Log;
  * @date 2016-10-20
  * @function
  */
-public class Rectangle {
+public class Rectangle extends Mesh {
 
 	private static String TAG = "Rectangle";
 
-	/** Size of the texture coordinate data in elements. */
-	private final int TEXTURE_COORDINATE_DATA_SIZE = 2;
-
-	/** Additional constants. */
-	private  final int POSITION_DATA_SIZE_IN_ELEMENTS = 3;
-	// private static final int NORMAL_DATA_SIZE_IN_ELEMENTS = 3;
-	//private  final int COLOR_DATA_SIZE_IN_ELEMENTS = 4;
-
-	// 存储顶点相关句柄
-	private final int[] vertexBufferObjs = new int[2];
-	// 存储顶点顺序相关句柄
-	private final int[] indexBufferObj = new int[1];
-
-	private int vertexCoordinatesIndex = 0;
-	//private int vertexColorsIndex = 0;
-	private int vertexTextureCoordinatesIndex= 0;
-	private int indicesCoordinatesIndex = 0;
-	
 	// 顶点信息，opengl 的坐标系与屏幕的坐标系不同，
 	// opengl 的原点在画布的中心，向左为x正，向上为y正，向外为z正。（右手坐标系）
 	// X, Y, Z,
-	private float verticesCoordinates[] = { -1.7777778f, 1.0f, 0.0f, // 0, Top
-																		// Left
+	private float verticesCoordinates[] = { 
+			-1.7777778f, 1.0f, 0.0f, // 0, Top Left
 			-1.7777778f, -1.0f, 0.0f, // 1, Bottom Left
 			1.7777778f, -1.0f, 0.0f, // 2, Bottom Right
 			1.7777778f, 1.0f, 0.0f // 3, Top Right
 	};
 
 	// R, G, B, A
-//	private float verticesColors[] = { 1.0f, 0.0f, 0.0f, 1.0f, // 0
-//			0.0f, 0.0f, 1.0f, 1.0f, // 1
-//			0.0f, 1.0f, 0.0f, 1.0f, // 2
-//			1.0f, 1.0f, 0.0f, 1.0f // 3
-//	};
+	private float verticesColors[] = { 1.0f, 0.0f, 0.0f, 1.0f, // 0
+			0.0f, 0.0f, 1.0f, 1.0f, // 1
+			0.0f, 1.0f, 0.0f, 1.0f, // 2
+			1.0f, 1.0f, 0.0f, 1.0f // 3
+	};
 
 	/**
 	 * 定义面的顶点的顺序很重要 在拼接曲面的时候，用来定义面的顶点的顺序非常重要，
@@ -65,137 +44,97 @@ public class Rectangle {
 	 * 只绘制面的“前面”。虽然“前面”“后面”的定义可以应人而易，但一般为所有的“前面”定义统一的顶点顺序(顺时针或是逆时针方向）。
 	 */
 	// The order we like to connect them.
-	private short[] indicesCoordinates = { 0, 1, 2, 0, 2, 3}; // 顶点坐标绘制的顺序，
+	private short[] indicesCoordinates = { 0, 1, 2, 0, 2, 3 }; // 顶点坐标绘制的顺序，
 
 	final float[] rectTextureCoordinateData = { 0.0f, 0.0f, // 0
 			0.0f, 1.0f, // 1
 			1.0f, 1.0f, // 2
 			1.0f, 0.0f // 3
 	};
+	/**
+	 * 模型矩阵 Store the model matrix. This matrix is used to move models from
+	 * object space (where each model can be thought of being located at the
+	 * center of the universe) to world space.
+	 */
+	private float[] mModelMatrix = new float[16];
 
-	public Rectangle(float screenWidth, float screenHeight,
+	private boolean isLandscape = true; // 是否为横屏，默认为是，可以动态获取手机的方向
+
+	private float translateZ = 0.0f; // 向Z轴平移的数量
+
+	public Rectangle(Context context, float screenWidth, float screenHeight,
 			ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
 		try {
+			// 初始化坐标信息
 			float ratio = screenWidth / screenHeight > 1 ? screenWidth
 					/ screenHeight : screenHeight / screenWidth;
-			verticesCoordinates = new float[] { 
-					-ratio, 1.0f, 0.0f, // 0, Top Left
+			verticesCoordinates = new float[] { -ratio, 1.0f, 0.0f, // 0, Top
+																	// Left
 					-ratio, -1.0f, 0.0f, // 1, Bottom Left
 					ratio, -1.0f, 0.0f, // 2, Bottom Right
 					ratio, 1.0f, 0.0f // 3, Top Right
 			};
+			// 设置顶点数据信息
+			setVerticesCoordinates(verticesCoordinates);
+			//setVerticesColors(verticesColors);
+			setVerticesTextureCoordinates(rectTextureCoordinateData);
+			setVerticesIndices(indicesCoordinates);
+			// 将顶点数据信息缓存到GPU
+			transformData2GPU();
 
-			// 客户端缓存
-			// 位置坐标缓存
-			final FloatBuffer rectCoordinatesBuffer = GLES20Utils
-					.allocateFloatBuffer(verticesCoordinates);
-//			final FloatBuffer rectColorBuffer = GLES20Utils
-//					.allocateFloatBuffer(verticesColors);
-			final FloatBuffer rectTextureCoordinatesBuffer = GLES20Utils
-					.allocateFloatBuffer(rectTextureCoordinateData);
-			final ShortBuffer rectIndicesBuffer = GLES20Utils
-					.allocateShortBuffer(indicesCoordinates);
-
-			// GPU缓存
-			// Second, copy these buffers into OpenGL's memory. After, we don't
-			// need
-			// to keep the client-side buffers around.
-			// 初始化内存句柄
-			GLES20.glGenBuffers(vertexBufferObjs.length, vertexBufferObjs, 0);
-			GLES20.glGenBuffers(1, indexBufferObj, 0);
-
-			if (vertexBufferObjs[0] > 0 && vertexBufferObjs[1] > 0 && indexBufferObj[0] > 0) {
-				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[0]); // 绑定句柄
-				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
-						rectCoordinatesBuffer.capacity()
-								* GLES20Utils.BYTES_PER_FLOAT,
-						rectCoordinatesBuffer, GLES20.GL_STATIC_DRAW); // 顶点坐标传入GPU缓存
-
-//				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[1]); // 绑定句柄
-//				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
-//						rectColorBuffer.capacity()
-//								* GLES20Utils.BYTES_PER_FLOAT, rectColorBuffer,
-//						GLES20.GL_STATIC_DRAW); // 顶点颜色坐标传入GPU缓存
-
-				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[1]); // 绑定句柄
-				GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
-						rectTextureCoordinatesBuffer.capacity()
-								* GLES20Utils.BYTES_PER_FLOAT, rectTextureCoordinatesBuffer,
-						GLES20.GL_STATIC_DRAW); // 贴图坐标传入GPU缓存
-				
-				GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,indexBufferObj[0]); // 绑定index buffer
-				GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER,
-						rectIndicesBuffer.capacity()
-								* GLES20Utils.BYTES_PER_SHORT,
-						rectIndicesBuffer, GLES20.GL_STATIC_DRAW); // 顶点绘制顺序传入GPU缓存
-				// 解绑vertex buffer
-				GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0); 
-				// 解绑index buffer											 
-				GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
-				
-				vertexCoordinatesIndex = vertexBufferObjs[0];
-				//vertexColorsIndex = vertexBufferObjs[1];
-				vertexTextureCoordinatesIndex = vertexBufferObjs[1];
-				indicesCoordinatesIndex = indexBufferObj[0];
-				
-			} else {
-				errorHandler.handleError(ErrorType.BUFFER_CREATION_ERROR,
-						"glGenBuffers");
-			}
 		} catch (Throwable t) {
 			Log.w(TAG, t);
 			errorHandler.handleError(ErrorType.BUFFER_CREATION_ERROR,
 					t.getLocalizedMessage());
 		}
+		
+		initShader(context, R.raw.no_color_rect_view_vertex_shader,R.raw.no_color_rect_view_fragment_shader,
+				new String[] { ATTR_POSITION, /*ATTR_COLOR,*/ ATTR_TEXTURE_COORDINATE });
+		setLookAtM(0.0f,0.0f,1.0f,0.0f,0.0f,-5.0f,0.0f,1.0f,0.0f);	// 设置观察矩阵即camera
 	}
 
-	public void render(int mPositionAttributeHandle, /*int mColorAttributeHandle,*/int mTextureCoordinateHandle) {
-		if (vertexBufferObjs[0] > 0 && indexBufferObj[0] > 0) {
-			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexCoordinatesIndex); // 绑定句柄
-			GLES20.glEnableVertexAttribArray(mPositionAttributeHandle); // 开启顶点位置属性传入
-			GLES20.glVertexAttribPointer(mPositionAttributeHandle,
-					POSITION_DATA_SIZE_IN_ELEMENTS, GLES20.GL_FLOAT, false, 0,
-					0);
-			
-//			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexColorsIndex); // 绑定句柄
-//			GLES20.glEnableVertexAttribArray(mColorAttributeHandle);
-//			GLES20.glVertexAttribPointer(mColorAttributeHandle,
-//					COLOR_DATA_SIZE_IN_ELEMENTS, GLES20.GL_FLOAT, false, 0, 0);
-			
+	@Override
+	public void setProjectionMatrix(int width, int height) {
 
-			// Pass in the texture information
-			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexTextureCoordinatesIndex);
-			GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle);
-			GLES20.glVertexAttribPointer(mTextureCoordinateHandle, TEXTURE_COORDINATE_DATA_SIZE, GLES20.GL_FLOAT, false,
-					0, 0);
-			
-			// Draw
-			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,
-					indicesCoordinatesIndex);// 绑定绘制顺序数据缓存
-			GLES20.glDrawElements(GLES20.GL_TRIANGLES,
-					indicesCoordinates.length, GLES20.GL_UNSIGNED_SHORT, 0);
-
-			GLES20.glDisableVertexAttribArray(mPositionAttributeHandle); // 关闭顶点位置属性传入
-//			GLES20.glDisableVertexAttribArray(mColorAttributeHandle); // 关闭顶点位置属性传入
-			GLES20.glDisableVertexAttribArray(mTextureCoordinateHandle); // 关闭顶点位置属性传入
-			GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-			GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+		GLES20.glViewport(0, 0, width, height);
+		// Create a new perspective projection matrix. The height will stay the
+		// same
+		// while the width will vary as per aspect ratio.
+		// 创建一个透视投影矩阵，高度保持一致，宽度则按比例计算
+		final float ratio = (float) width / height;
+		if (ratio >= 1.0) {
+			isLandscape = true;
+		} else {
+			isLandscape = false;
 		}
+		final float left = -ratio;
+		final float right = ratio;
+		final float bottom = -1.0f;
+		final float top = 1.0f;
+		final float near = 1.0f;
+		final float far = 100.0f;
+		Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near,
+				far);
 	}
 
-	/**
-	 * 释放GPU缓存
-	 */
-	public void release() {
-		if (vertexBufferObjs[0] > 0) {
-			GLES20.glDeleteBuffers(vertexBufferObjs.length, vertexBufferObjs, 0);
-			vertexBufferObjs[0] = 0;
-		}
+	public void draw() {
 
-		if (indexBufferObj[0] > 0) {
-			GLES20.glDeleteBuffers(indexBufferObj.length, indexBufferObj, 0);
-			indexBufferObj[0] = 0;
+
+		// Do a complete rotation every 10 seconds.
+		long time = SystemClock.uptimeMillis() % 10000L;
+		float angleInDegrees = (360.0f / 10000.0f) * ((int) time);
+		// System.out.println("--------------- angleInDegrees==="+angleInDegrees);
+		
+		// Draw the triangle facing straight on.
+		Matrix.setIdentityM(mModelMatrix, 0);
+		if (isLandscape) {
+			translateZ = 0.0f;
+		} else {
+			translateZ = -4.0f;
 		}
+		Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, translateZ);
+		render(mModelMatrix);
 	}
+
 }

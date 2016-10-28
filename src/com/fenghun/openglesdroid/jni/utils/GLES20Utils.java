@@ -365,4 +365,43 @@ public class GLES20Utils {
 		shortBuffer.position(0);
 		return shortBuffer;
 	}
+
+	/**
+	 *  初始化gpu缓存 浮点型
+	 *  
+	 * @param rectCoordinatesBuffer
+	 * @param vertexBufferObjs
+	 * @param i
+	 * @return
+	 */
+	public static int allocateFloatGPUBuffer(FloatBuffer rectCoordinatesBuffer, int[] vertexBufferObjs, int i) {
+		// TODO Auto-generated method stub
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBufferObjs[i]); // 绑定句柄
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
+				rectCoordinatesBuffer.capacity()
+						* GLES20Utils.BYTES_PER_FLOAT,
+				rectCoordinatesBuffer, GLES20.GL_STATIC_DRAW); // 顶点坐标传入GPU缓存
+		return vertexBufferObjs[i];
+	}
+
+	/**
+	 * 初始化gpu缓存 短整型
+	 * 
+	 * @param rectIndicesBuffer
+	 * @param indexBufferObj
+	 * @param i
+	 * @return
+	 */
+	public static int allocateShortGPUBuffer(ShortBuffer rectIndicesBuffer,
+			int[] indexBufferObj, int i) {
+		// TODO Auto-generated method stub
+		
+		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,
+				indexBufferObj[i]); // 绑定index buffer
+		GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER,
+				rectIndicesBuffer.capacity() * GLES20Utils.BYTES_PER_SHORT,
+				rectIndicesBuffer, GLES20.GL_STATIC_DRAW); // 顶点绘制顺序传入GPU缓存
+		
+		return indexBufferObj[i];
+	}
 }

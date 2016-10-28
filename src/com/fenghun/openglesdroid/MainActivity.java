@@ -71,13 +71,13 @@ public class MainActivity extends Activity {
 		// GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
 		// surfaceViewFL.addView(surfaceView);
 		
-//		screenWidth = displayMetrics.widthPixels;
-//		screenHeight = displayMetrics.heightPixels;
-//		surfaceViewVR = new VRSurfaceView(this,displayMetrics.density);
-//		surfaceViewFL.addView(surfaceViewVR);
-
-		MySurfaceView mySurfaceview = new MySurfaceView(this);
-		surfaceViewFL.addView(mySurfaceview);
+		screenWidth = displayMetrics.widthPixels;
+		screenHeight = displayMetrics.heightPixels;
+		surfaceViewVR = new VRSurfaceView(this,displayMetrics.density);
+		surfaceViewFL.addView(surfaceViewVR);
+//
+//		MySurfaceView mySurfaceview = new MySurfaceView(this);
+//		surfaceViewFL.addView(mySurfaceview);
 //		
 		MyOpenglES.test();
 	}
@@ -86,14 +86,14 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-		if(surfaceViewVR != null)surfaceViewVR.onResume();
+		if(surfaceViewVR != null) surfaceViewVR.onResume();
 	}
 	
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		super.onPause();
-		if(surfaceViewVR !=null)surfaceViewVR.onPause();
+		if(surfaceViewVR !=null) surfaceViewVR.onPause();
 	}
 	
 	

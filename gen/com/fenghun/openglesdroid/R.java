@@ -52,15 +52,21 @@ public final class R {
     public static final class raw {
         public static final int blending_fragment=0x7f040000;
         public static final int blending_vertex=0x7f040001;
-        public static final int per_pixel_fragment_shader_no_tex=0x7f040002;
-        public static final int per_pixel_fragment_shader_tex_and_light=0x7f040003;
-        public static final int per_pixel_vertex_shader_no_tex=0x7f040004;
-        public static final int per_pixel_vertex_shader_tex_and_light=0x7f040005;
-        public static final int rect_view_distortion_fragment_shader=0x7f040006;
-        public static final int rect_view_fragment_shader=0x7f040007;
-        public static final int rect_view_vertex_shader=0x7f040008;
-        public static final int vbo_fragment_shader=0x7f040009;
-        public static final int vbo_vertex_shader=0x7f04000a;
+        public static final int no_color_rect_view_fragment_shader=0x7f040002;
+        public static final int no_color_rect_view_vertex_shader=0x7f040003;
+        public static final int no_texture_rect_view_fragment_shader=0x7f040004;
+        public static final int no_texture_rect_view_vertex_shader=0x7f040005;
+        public static final int per_pixel_fragment_shader_no_tex=0x7f040006;
+        public static final int per_pixel_fragment_shader_tex_and_light=0x7f040007;
+        public static final int per_pixel_vertex_shader_no_tex=0x7f040008;
+        public static final int per_pixel_vertex_shader_tex_and_light=0x7f040009;
+        public static final int rect_view_distortion_fragment_shader=0x7f04000a;
+        public static final int rect_view_fragment_shader=0x7f04000b;
+        public static final int rect_view_vertex_shader=0x7f04000c;
+        public static final int sphere_frag=0x7f04000d;
+        public static final int sphere_vertex=0x7f04000e;
+        public static final int vbo_fragment_shader=0x7f04000f;
+        public static final int vbo_vertex_shader=0x7f040010;
     }
     public static final class string {
         public static final int action_settings=0x7f060002;
