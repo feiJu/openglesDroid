@@ -487,12 +487,12 @@ public class Mesh {
 	 * 
 	 * @param rectTextureCoordinate
 	 */
-	public void setVerticesTextureCoordinates(float[] rectTextureCoordinate) {
-		if (rectTextureCoordinate != null) {
+	public void setVerticesTextureCoordinates(float[] verticesTextureCoordinate) {
+		if (verticesTextureCoordinate != null) {
 			verTextureCoordinatesBuffer = GLES20Utils
-					.allocateFloatBuffer(rectTextureCoordinate);
+					.allocateFloatBuffer(verticesTextureCoordinate);
 		} else {
-			throw new NullPointerException("rectTextureCoordinate is null");
+			throw new NullPointerException("verticesTextureCoordinate is null");
 		}
 	}
 

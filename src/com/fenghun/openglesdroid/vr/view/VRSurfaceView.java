@@ -5,6 +5,7 @@ import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
 
 import android.opengl.GLSurfaceView;
 import android.util.Log;
+import android.view.MotionEvent;
 
 
 public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
@@ -13,11 +14,19 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 	
 	private MainActivity mainActivity;
 
+	 // Offsets for touch events	 
+    private float mPreviousX;
+    private float mPreviousY;
+    private float mDensity;	// 屏幕密度
+    private float mDeltaX;
+    private float mDeltaY;
+    private VRRender vrRender;
 	public VRSurfaceView(MainActivity mainActivity, float density) {
 		// TODO Auto-generated constructor stub
 		super(mainActivity);
 		// TODO Auto-generated constructor stub
 		this.mainActivity = mainActivity;
+		mDensity = density;
 		init();
 	}
 
@@ -28,7 +37,8 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 		// TODO Auto-generated method stub
 		Log.d(TAG, "------------ init() is called!");
 		setEGLContextClientVersion(2);
-		setRenderer(new VRRender(mainActivity,this));
+		vrRender = new VRRender(mainActivity,this);
+		setRenderer(vrRender);
 		// setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY); // 设置为脏模式
 	}
 	
@@ -37,4 +47,44 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 		// TODO Auto-generated method stub
 		Log.d(TAG, "errorType="+errorType.name()+","+cause);
 	}
+	
+	/**
+	 * 
+	 * 重写触屏事件
+	 */
+	@Override
+	public boolean onTouchEvent(MotionEvent event) 
+	{
+		if (event != null)
+		{			
+			float x = event.getX();
+			float y = event.getY();
+			
+			if (event.getAction() == MotionEvent.ACTION_MOVE)
+			{
+				if (vrRender != null)
+				{
+					float deltaX = (x - mPreviousX) / mDensity / 2f;
+					float deltaY = (y - mPreviousY) / mDensity / 2f;
+					
+					mDeltaX += deltaX;
+					mDeltaY += deltaY;
+					
+					vrRender.setDeltaX(mDeltaX);
+					vrRender.setDeltaY(mDeltaY);
+					//System.out.println("------mDeltaX=="+mDeltaX+",mDeltaY="+mDeltaY);
+				}
+			}	
+			
+			mPreviousX = x;
+			mPreviousY = y;
+			
+			return true;
+		}
+		else
+		{
+			return super.onTouchEvent(event);
+		}		
+	}
+	
 }

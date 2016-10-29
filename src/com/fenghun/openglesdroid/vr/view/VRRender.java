@@ -36,6 +36,9 @@ public class VRRender implements Renderer {
 
 	private MainActivity mainActivity;
 
+	private float deltaX;
+	private float deltaY;
+	
 	//
 	public VRRender(MainActivity mainActivity, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
@@ -112,6 +115,22 @@ public class VRRender implements Renderer {
 	 */
 	private void drawSphereView() {
 		// TODO Auto-generated method stub
-		sphereView.draw();
+		sphereView.draw(deltaX,deltaY);
+	}
+
+	public float getDeltaX() {
+		return deltaX;
+	}
+
+	public void setDeltaX(float deltaX) {
+		this.deltaX = deltaX;
+	}
+
+	public float getDeltaY() {
+		return deltaY;
+	}
+
+	public void setDeltaY(float deltaY) {
+		this.deltaY = deltaY;
 	}
 }

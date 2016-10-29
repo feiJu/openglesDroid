@@ -26,7 +26,9 @@ public class Sphere extends Mesh {
 
 	private float[] verticesCoordinates; // 顶点坐标
 
-	//private float[] verticesColors;
+	private float[] verticesColors;	// 顶点颜色
+	
+	private float[] verTextureCoordinate;	// 顶点材质坐标
 	
 	// The order we like to connect them.
 	private short[] indicesCoordinates; // 顶点坐标顺序
@@ -38,7 +40,7 @@ public class Sphere extends Mesh {
 	 */
 	private float[] mModelMatrix = new float[16];
 	
-	private int radiusHandle = -1;
+	//private int radiusHandle = -1;
 
 	public Sphere(Context context, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
@@ -46,6 +48,7 @@ public class Sphere extends Mesh {
 		try {
 			setVerticesCoordinates(verticesCoordinates);	// 设置顶点坐标
 			//setVerticesColors(verticesColors);
+			setVerticesTextureCoordinates(verTextureCoordinate);
 			setVerticesIndices(indicesCoordinates);	// 设置顶点顺序
 			transformData2GPU();
 		} catch (Exception e) {
@@ -55,10 +58,10 @@ public class Sphere extends Mesh {
 			e.printStackTrace();
 		}
 		initShader(context, R.raw.sphere_vertex,R.raw.sphere_frag,
-				new String[] { ATTR_POSITION, /*ATTR_COLOR, ATTR_TEXTURE_COORDINATE*/ });
-		radiusHandle = GLES20.glGetUniformLocation(mProgramHandle,
-				"u_radius");
-		GLES20.glUseProgram(mProgramHandle);
+				new String[] { ATTR_POSITION, ATTR_COLOR, ATTR_TEXTURE_COORDINATE });
+//		radiusHandle = GLES20.glGetUniformLocation(mProgramHandle,
+//				"u_radius");
+//		GLES20.glUseProgram(mProgramHandle);
 		
 		//setLookAtM(0.0f,0.0f,1.0f,0.0f,0.0f,-5.0f,0.0f,1.0f,0.0f);	// 设置观察矩阵即camera
 		setLookAtM(0, 0, 30, 0f, 0f, 0f, 0f, 1.0f, 0.0f);	// 设置观察矩阵即camera
@@ -72,8 +75,8 @@ public class Sphere extends Mesh {
 		 * 原理见 http://www.tuicool.com/articles/Qjm6bmy
 		 */
 		ArrayList<Float> alVertix = new ArrayList<Float>();// 存放顶点坐标的ArrayList
-		final int angleSpan = 1;// 将球进行单位切分的角度
-		final int angleSpanH = 1;
+		final int angleSpan = 60;// 将球进行单位切分的角度
+		final int angleSpanH = 90;
 
 		for (int vAngle = -90; vAngle <= 90; vAngle = vAngle + angleSpan)// 垂直方向angleSpan度一份
 		{
@@ -102,6 +105,20 @@ public class Sphere extends Mesh {
 			verticesCoordinates[i] = alVertix.get(i);
 		}
 
+		verticesColors = new float[vCount*4];
+		for(int i=0;i<verticesColors.length;i++){
+			if(i%4 == 3){
+				verticesColors[i] = 1.0f;
+			}else{
+				if(i%2 == 0){
+					verticesColors[i] = 1.0f;
+				}else{
+					verticesColors[i] = 0.0f;
+				}
+				
+			}
+		}
+		
 		// Now build the index data
 		ArrayList<Integer> alIndex = new ArrayList<Integer>();
 		int row = (180 / angleSpan) + 1; // 球面切分的行数
@@ -151,20 +168,84 @@ public class Sphere extends Mesh {
 		for (int i = 0; i < alIndex.size(); i++) {
 			indicesCoordinates[i] = alIndex.get(i).shortValue();
 		}
+		
+		for(int i=0;i<indicesCoordinates.length;i++){
+			System.out.print(indicesCoordinates[i]+",");
+		}
+		System.out.println("");
+		
+		ArrayList<Float> verTextArr = new ArrayList<Float>();// 存放顶点坐标的ArrayList
+		verTextureCoordinate = new float[vCount*2];
+		
+//		verTextureCoordinate = new float[]{
+//				
+//				0.0f,1.0f,
+//				0.33333334f,1.0f,
+//				0.6666667f,1.0f,
+//				1.0f,1.0f,
+//				
+//				0.0f,0.5f,
+//				0.33333334f,0.5f,
+//				0.6666667f,0.5f,
+//				1.0f,0.5f,
+//
+//				0.0f,0.0f,
+//				0.33333334f,0.0f,
+//				0.6666667f,0.0f,
+//				1.0f,0.0f
+//
+//				
+//		};
+		
+		float col_unit = 1.0f/(col-1);
+		float row_unit = 1.0f/(row-1);
+		for (int i = row-1; i >=0; i--) { // 对每一行循环
+			
+			for(int j=0; j < col; j++){	// 对每一列循环
+				verTextArr.add(j * col_unit);
+//				if(j%4 ==3){
+//					verTextArr.add((i+1) * row_unit);
+//				}else{
+					verTextArr.add(i * row_unit);
+//				}
+				
+			}
+			
+//			for(int j=0; j < col; j++){	// 对每一列循环
+//				verTextArr.add(j * col_unit);
+//				verTextArr.add((i-1) * row_unit);
+//			}
+			
+		}
+		System.out.println("----- verTextArr  size=="+verTextArr.size());
+		
+		for(int i=0;i<verTextArr.size();i++){
+			System.out.print(verTextArr.get(i)+",");
+		}
+		System.out.println("");
+		
+		for(int i=0;i<verTextureCoordinate.length;i++){	
+			verTextureCoordinate[i] = verTextArr.get(i);
+		}
+		System.out.println("texture ver num = "+verTextureCoordinate.length);
 	}
 
 	/**
 	 * 绘制球体
+	 * @param deltaX 
+	 * @param deltaY 
 	 */
-	public void draw() {
+	public void draw(float deltaX, float deltaY) {
 		// TODO Auto-generated method stub
 		
 		
 		// 将半径尺寸传入shader程序
-		GLES20.glUniform1f(radiusHandle, radius * UNIT_SIZE);
+		//GLES20.glUniform1f(radiusHandle, radius * UNIT_SIZE);
 		
 		// Draw the triangle facing straight on.
 		Matrix.setIdentityM(mModelMatrix, 0);
+		Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转
+		Matrix.rotateM(mModelMatrix, 0, deltaY, 1.0f, 0.0f, 0.0f);	// 绕X轴旋转
 		render(mModelMatrix);
 	}
 }

@@ -1,26 +1,17 @@
-precision mediump float;
-uniform float u_radius;	// 半径尺寸	
+precision mediump float;       	// Set the default precision to medium. We don't need as high of a 
+								// precision in the fragment shader.
+//varying vec4 v_Color;          	// This is the color from the vertex shader interpolated across the 
+  								// triangle per fragment.
+varying vec2 v_TexCoordinate;   // Interpolated texture coordinate per fragment.
 
-varying vec2 mcLongLat;//接收从顶点着色器过来的参数
-varying vec3 vPosition;//接收从顶点着色器过来的顶点位置
+uniform sampler2D u_Texture;    // The input texture.
 
-void main()                         
-{
-   vec3 color;
-   float n = 8.0;//一个坐标分量分的总份数
-   float span = 2.0*u_radius/n;//每一份的长度
-   //每一维在立方体内的行列数
-   int i = int((vPosition.x + u_radius)/span);
-   int j = int((vPosition.y + u_radius)/span);
-   int k = int((vPosition.z + u_radius)/span);
-   //计算当点应位于白色块还是黑色块中
-   int whichColor = int(mod(float(i+j+k),2.0));
-   if(whichColor == 1) {//奇数时为红色
-   		color = vec3(0.678,0.231,0.129);//红色
-   }
-   else {//偶数时为白色
-   		color = vec3(1.0,1.0,1.0);//白色
-   }
-   //将计算出的颜色给此片元
-   gl_FragColor=vec4(color,0);
-}     
+
+// The entry point for our fragment shader.
+void main()                    		
+{                              
+	// Multiply the color by the diffuse illumination level to get final output color.
+    //gl_FragColor = v_Color;   
+   // gl_FragColor = (v_Color * texture2D(u_Texture, v_TexCoordinate)); 
+    gl_FragColor = texture2D(u_Texture, v_TexCoordinate);                          		
+}                                                                     	

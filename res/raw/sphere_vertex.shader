@@ -1,12 +1,22 @@
-uniform mat4 u_MVPMatrix; //总变换矩阵
-attribute vec3 a_Position;  //顶点位置
+uniform mat4 u_MVPMatrix;		// A constant representing the combined model/view/projection matrix.      		          		
+		  			
+attribute vec4 a_Position;		// Per-vertex position information we will pass in.   				
+//attribute vec4 a_Color;			// Per-vertex color information we will pass in. 				     		
+attribute vec2 a_TexCoordinate; // Per-vertex texture coordinate information we will pass in. 	
+		     		
+//varying vec4 v_Color;			// This will be passed into the fragment shader.          		 	
+varying vec2 v_TexCoordinate;   // This will be passed into the fragment shader.
 
-varying vec3 vPosition;//用于传递给片元着色器的顶点位置
-
-void main()
-{
-   //根据总变换矩阵计算此次绘制此顶点位置
-   gl_Position = u_MVPMatrix * vec4(a_Position,1);
-   //将顶点的位置传给片元着色器
-   vPosition = a_Position;//将原始顶点位置传递给片元着色器
-}
+// The entry point for our vertex shader.  
+void main()                                                 	
+{                                                                
+	// Pass through the color.
+	//v_Color = a_Color;
+	
+	// Pass through the texture coordinate.
+	v_TexCoordinate = a_TexCoordinate;   
+	
+	// gl_Position is a special variable used to store the final position.
+	// Multiply the vertex by the matrix to get the final point in normalized screen coordinates.
+	gl_Position = u_MVPMatrix * a_Position;                       		  
+}                                                          
