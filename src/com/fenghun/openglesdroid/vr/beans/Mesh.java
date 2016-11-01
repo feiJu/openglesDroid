@@ -241,6 +241,12 @@ public class Mesh {
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
 					GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 			
+//			
+//			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mOneFrameDataHandle);
+//			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_MIRRORED_REPEAT);
+//			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mOneFrameDataHandle);
+//			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_MIRRORED_REPEAT);
+			
 			mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle,
 					UNIFORM_TEXTURE);
 			if (mTextureUniformHandle == -1) {

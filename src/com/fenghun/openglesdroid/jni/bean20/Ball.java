@@ -203,12 +203,6 @@ public class Ball {
                      //中间行的两个相邻点与上一行的对应点构成三角形          
                      int k=i*col+j; 
                      
-//                     if(j==0){
-//                    	 alIndex.add(k);
-//                    	 alIndex.add(k-col);
-//                         alIndex.add(k-1); 
-//                     }
-                     
                      alIndex.add(k-col);
                      alIndex.add(k-1);
                      alIndex.add(k);

@@ -46,8 +46,10 @@ public class Rectangle extends Mesh {
 	// The order we like to connect them.
 	private short[] indicesCoordinates = { 0, 1, 2, 0, 2, 3 }; // 顶点坐标绘制的顺序，
 
-	final float[] rectTextureCoordinateData = { 0.0f, 0.0f, // 0
+	final float[] rectTextureCoordinateData = { 
+			0.0f, 0.0f, // 0
 			0.0f, 1.0f, // 1
+			
 			1.0f, 1.0f, // 2
 			1.0f, 0.0f // 3
 	};

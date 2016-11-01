@@ -75,13 +75,14 @@ public class Sphere extends Mesh {
 		 * 原理见 http://www.tuicool.com/articles/Qjm6bmy
 		 */
 		ArrayList<Float> alVertix = new ArrayList<Float>();// 存放顶点坐标的ArrayList
-		final int angleSpan = 60;// 将球进行单位切分的角度
-		final int angleSpanH = 90;
-
+		final int angleSpan = 2;// 将球进行单位切分的角度
+		final int angleSpanH = 2;
+		float x_tmp = 0.0f,y_tmp=0.0f,z_tmp=0.0f;
 		for (int vAngle = -90; vAngle <= 90; vAngle = vAngle + angleSpan)// 垂直方向angleSpan度一份
 		{
 			for (int hAngle = 0; hAngle < 360; hAngle = hAngle + angleSpanH)// 水平方向angleSpan度一份
-			{ // 纵向横向各到一个角度后计算对应的此点在球面上的坐标
+			{ 
+				// 纵向横向各到一个角度后计算对应的此点在球面上的坐标
 				float z0 = (float) (radius * UNIT_SIZE
 						* Math.cos(Math.toRadians(vAngle)) * Math.cos(Math
 						.toRadians(hAngle)));
@@ -91,10 +92,23 @@ public class Sphere extends Mesh {
 				float y0 = (float) (radius * UNIT_SIZE * Math.sin(Math
 						.toRadians(vAngle)));
 
+				if(hAngle == 0){
+					x_tmp = x0;
+					y_tmp = y0;
+					z_tmp = z0;
+				}
+				
 				// 将计算出来的XYZ坐标加入存放顶点坐标的ArrayList
 				alVertix.add(x0);
 				alVertix.add(y0);
 				alVertix.add(z0);
+				
+				// 纵向切分最后多添加一个点，弥补glDrawElements绘制贴图最后一个面绘制贴图坐标无法计算问题
+				if(hAngle == (360 - angleSpanH)){	
+					alVertix.add(x_tmp);
+					alVertix.add(y_tmp);
+					alVertix.add(z_tmp);
+				}
 			}
 		}
 		int vCount = alVertix.size() / 3;// 顶点的数量为坐标值数量的1/3，因为一个顶点有3个坐标
@@ -122,23 +136,31 @@ public class Sphere extends Mesh {
 		// Now build the index data
 		ArrayList<Integer> alIndex = new ArrayList<Integer>();
 		int row = (180 / angleSpan) + 1; // 球面切分的行数
-		int col = 360 / angleSpanH; // 球面切分的列数
+		int col = 360 / angleSpanH +1; // 球面切分的列数，添加了最后一个点相当于多了一列
 		for (int i = 0; i < row; i++) { // 对每一行循环
 			if (i > 0 && i < row - 1) {
 
-				for (int j = 0; j < col; j++) {
-					// 中间行的两个相邻点与下一行的对应点构成三角形
-					int k = i * col + j;
+				if(i==1){
+					for (int j = 0; j < col; j++) {
+						// 中间行的两个相邻点与下一行的对应点构成三角形
+						int k = i * col + j;
 
-					alIndex.add(k - col);
-					alIndex.add(k);
-					alIndex.add(k - 1);
+						alIndex.add(k - col);
+						alIndex.add(k);
+						alIndex.add(k - 1);
 
-					alIndex.add(k); // 绘制框架添加
-					alIndex.add(k - col); // 绘制框架添加
-					alIndex.add(k - col + 1); // 绘制框架添加
-
+						if(j==col-1){
+							alIndex.add(k - col); // 绘制框架添加
+							alIndex.add(k - col + 1); // 绘制框架添加
+							alIndex.add(k); // 绘制框架添加
+						}else{
+							alIndex.add(k); // 绘制框架添加
+							alIndex.add(k - col); // 绘制框架添加
+							alIndex.add(k - col + 1); // 绘制框架添加
+						}
+					}
 				}
+				
 
 				// 中间行
 				for (int j = 0; j < col; j++) {
@@ -146,19 +168,26 @@ public class Sphere extends Mesh {
 					int k = i * col + j;
 
 					if (j == 0) {
+						
+						alIndex.add(k); // 绘制框架添加
 						alIndex.add(k + col); // 绘制框架添加
 						alIndex.add(k + col - 1); // 绘制框架添加
-						alIndex.add(k); // 绘制框架添加
-
 					} else {
 						alIndex.add(k); // 绘制框架添加
 						alIndex.add(k + col); // 绘制框架添加
 						alIndex.add(k + col - 1); // 绘制框架添加
 					}
-					alIndex.add(k + col);
-					alIndex.add(k);
-					alIndex.add(k + 1);
-
+				
+					if(j == col-1){
+						
+						alIndex.add(k + col);
+						alIndex.add(k);
+						alIndex.add(k + 1);
+					}else{
+						alIndex.add(k + col);
+						alIndex.add(k);
+						alIndex.add(k + 1);
+					}
 				}
 			}
 		}
@@ -169,39 +198,46 @@ public class Sphere extends Mesh {
 			indicesCoordinates[i] = alIndex.get(i).shortValue();
 		}
 		
-		for(int i=0;i<indicesCoordinates.length;i++){
-			System.out.print(indicesCoordinates[i]+",");
-		}
-		System.out.println("");
+//		for(int i=0;i<indicesCoordinates.length;i++){
+//			System.out.print(indicesCoordinates[i]+",");
+//		}
+//		System.out.println("");
 		
 		ArrayList<Float> verTextArr = new ArrayList<Float>();// 存放顶点坐标的ArrayList
-		verTextureCoordinate = new float[vCount*2];
 		
 //		verTextureCoordinate = new float[]{
 //				
 //				0.0f,1.0f,
-//				0.33333334f,1.0f,
-//				0.6666667f,1.0f,
+//				0.25f,1.0f,
+//				0.5f,1.0f,
+//				0.75f,1.0f,
 //				1.0f,1.0f,
 //				
-//				0.0f,0.5f,
-//				0.33333334f,0.5f,
-//				0.6666667f,0.5f,
-//				1.0f,0.5f,
-//
-//				0.0f,0.0f,
-//				0.33333334f,0.0f,
-//				0.6666667f,0.0f,
-//				1.0f,0.0f
-//
 //				
+//				0.0f,1.0f,
+//				0.25f,1.0f,
+//				0.5f,1.0f,
+//				0.75f,1.0f,
+//				1.0f,1.0f,
+//				
+//				0.0f,0.0f,
+//				0.25f,0.0f,
+//				0.5f,0.0f,
+//				0.75f,0.0f,
+//				1.0f,0.0f
 //		};
 		
+		verTextureCoordinate = new float[vCount*2];
+		
+		//int row_texture = (180 / angleSpan) + 1; // 球面切分的行数
+		// 球面切分的列数，较顶点顺序少一列来算，弥补glDrawElements绘制贴图最后一个面绘制贴图坐标无法计算问题
+		//int col_texture = 360 / angleSpanH +1;
+		System.out.println("-------row ="+row+",col=="+col);
 		float col_unit = 1.0f/(col-1);
 		float row_unit = 1.0f/(row-1);
 		for (int i = row-1; i >=0; i--) { // 对每一行循环
 			
-			for(int j=0; j < col; j++){	// 对每一列循环
+			for(int j=0; j <col; j++){	// 对每一列循环
 				verTextArr.add(j * col_unit);
 //				if(j%4 ==3){
 //					verTextArr.add((i+1) * row_unit);
@@ -219,11 +255,11 @@ public class Sphere extends Mesh {
 		}
 		System.out.println("----- verTextArr  size=="+verTextArr.size());
 		
-		for(int i=0;i<verTextArr.size();i++){
-			System.out.print(verTextArr.get(i)+",");
-		}
-		System.out.println("");
-		
+//		for(int i=0;i<verTextArr.size();i++){
+//			System.out.print(verTextArr.get(i)+"f,");
+//		}
+//		System.out.println("");
+//		
 		for(int i=0;i<verTextureCoordinate.length;i++){	
 			verTextureCoordinate[i] = verTextArr.get(i);
 		}

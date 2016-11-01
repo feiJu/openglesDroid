@@ -67,9 +67,9 @@ public class MainActivity extends Activity {
 		final DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		
-		// surfaceView = new GLES20SurfaceView(this,displayMetrics.density);
-		// GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
-		// surfaceViewFL.addView(surfaceView);
+//		surfaceView = new GLES20SurfaceView(this,displayMetrics.density);
+//		//GLES10SurfaceView surfaceView = new GLES10SurfaceView(this);
+//		surfaceViewFL.addView(surfaceView);
 		
 		screenWidth = displayMetrics.widthPixels;
 		screenHeight = displayMetrics.heightPixels;

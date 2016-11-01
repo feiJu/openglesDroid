@@ -10,6 +10,7 @@ import javax.microedition.khronos.opengles.GL10;
 import com.fenghun.openglesdroid.MainActivity;
 import com.fenghun.openglesdroid.R;
 import com.fenghun.openglesdroid.jni.bean20.Cube;
+import com.fenghun.openglesdroid.jni.bean20.Cube360;
 import com.fenghun.openglesdroid.jni.bean20.Cubes;
 import com.fenghun.openglesdroid.jni.bean20.CubesClientSide;
 import com.fenghun.openglesdroid.jni.bean20.CubesClientSideWithStride;
@@ -69,6 +70,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	private TriangleTest triangleTest;
 	
 	private Cube cube;
+	
+	private Cube360 cube360;
 	
 	private Point point;
 	
@@ -295,7 +298,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		
 		
 	    // 测试基本图形
-	    testBaseShapesInit();
+	    //testBaseShapesInit();
 	    
 	    
 	    // 测试光照，贴图等
@@ -304,6 +307,9 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    // 测试texture filter
 	    //testTextureFilterInit();
 	    
+	    // 测试cube360 一张贴图包裹六个面
+	    testTextureCube360Init();
+	    
 	    // 测试Vertex Buffer Objects (VBOs)
 	    //testVBOsInit();
 	   
@@ -311,8 +317,6 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    //testIBOsInit();
 	    
 	}
-
-	
 
 	@Override
 	public void onSurfaceChanged(GL10 glUnused, int width, int height) {
@@ -344,13 +348,16 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		// 重绘背景色
 		//GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 		
-		testTriangles(triangleTest);	
+		//testTriangles(triangleTest);	
 		 
 		// 测试光照，贴图等
 		//testCubes(cube);
 		
 		// 测试材质过滤器，设置材质显示效果
 		//testTextureFilter(cube);
+		
+		// 测试cube360 一张贴图包裹六个面
+	    testTextureCube360(cube360);
 		
 		// 测试Vertex Buffer Objects (VBOs)
 	    //testVBOs(); 
@@ -621,6 +628,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         }
         Matrix.setIdentityM(mAccumulatedRotation, 0);	// 初始化矩阵
 	}
+
 	
 	
 	/**
@@ -684,7 +692,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		 * 绕自身旋转
 		 */
         Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 0.0f, 1.0f, -2.0f);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 1.0f, -5.0f);
         
 //        // 直接旋转模型矩阵
 //        Matrix.rotateM(mModelMatrix, 0, mDeltaX, 0.0f, 1.0f, 0.0f);	// 绕X轴旋转
@@ -692,6 +700,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		
         // 设置一个矩阵，用于保存当前的旋转信息
         Matrix.setIdentityM(mCurrentRotation, 0);
+        
         Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);	// 绕X轴旋转
 		Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);	// 绕Y轴旋转 
 		mDeltaX = 0.0f;
@@ -735,6 +744,171 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         // Draw a point to indicate the light.
         GLES20.glUseProgram(mPointProgramHandle);        
 		point.drawLight(cube.getmMVPMatrix(),mLightModelMatrix, mProjectionMatrix,
+				mPointProgramHandle, mLightPosInModelSpace, mViewMatrix);
+	    
+	}
+	
+	
+	
+
+	private void testTextureCube360Init() {
+		// TODO Auto-generated method stub
+		  // 初始化一个立方体
+	    cube360 = new Cube360(context);
+		String vertexShader = GLES20Utils.readTextFileFromRawResource(context,
+				R.raw.per_pixel_vertex_shader_tex_and_light); // 顶点着色器
+		String fragmentShader = GLES20Utils.readTextFileFromRawResource(
+				context, R.raw.per_pixel_fragment_shader_tex_and_light); // 片段着色器
+		
+		// 加载并获取着色器句柄
+		int vertexShaderHandle = GLES20Utils.loadShader(GLES20.GL_VERTEX_SHADER, vertexShader);
+	    int fragmentShaderHandle = GLES20Utils.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader);
+	    
+	    mPerVertexProgramHandle = GLES20Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle, 
+	    		new String[] {"a_Position", "a_Normal", "a_TexCoordinate"});
+		
+	    // Load the texture
+	    //mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.stone_wall_public_domain);
+	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.sea360);
+	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
+	    mGrassDataHandle = GLES20Utils.loadTexture(context, R.drawable.noisy_grass_public_domain);
+	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
+	    
+	    // 初始化光源点，以便于观察
+	    point = new Point();
+	    final int pointVertexShaderHandle = GLES20Utils.loadShader(
+				GLES20.GL_VERTEX_SHADER, point.getPointVertexShader());
+		final int pointFragmentShaderHandle = GLES20Utils.loadShader(
+				GLES20.GL_FRAGMENT_SHADER, point.getPointFragmentShader());
+		mPointProgramHandle = GLES20Utils.createAndLinkProgram(
+				pointVertexShaderHandle, pointFragmentShaderHandle,
+				new String[] { "a_Position" });
+		
+		// 初始化一平面
+		plane = new Plane();
+	
+
+	    if (mQueuedMinFilter != 0)
+        {
+        	setMinFilter(mQueuedMinFilter);
+        }
+        
+        if (mQueuedMagFilter != 0)
+        {
+        	setMagFilter(mQueuedMagFilter);
+        }
+        Matrix.setIdentityM(mAccumulatedRotation, 0);	// 初始化矩阵
+	}
+	
+	private void testTextureCube360(Cube360 cube360) {
+		// TODO Auto-generated method stub
+
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);	
+	
+		 // Do a complete rotation every 10 seconds.
+        long time = SystemClock.uptimeMillis() % 10000L;       
+        long slowTime = SystemClock.uptimeMillis() % 100000L; 
+        float angleInDegrees = (360.0f / 10000.0f) * ((int) time);                
+        float slowAngleInDegrees = (360.0f / 100000.0f) * ((int) slowTime);
+        
+        // Set our per-vertex lighting program.
+        GLES20.glUseProgram(mPerVertexProgramHandle);
+        
+        
+        // Set program handles for cube drawing.
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVPMatrix");
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_MVMatrix"); 
+        mLightPosHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_LightPos");
+        mTextureUniformHandle = GLES20.glGetUniformLocation(mPerVertexProgramHandle, "u_Texture");
+        
+        
+        mPositionHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Position");
+        mNormalHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_Normal");   
+        mTextureCoordinateHandle = GLES20.glGetAttribLocation(mPerVertexProgramHandle, "a_TexCoordinate");
+		
+        
+        // Set the active texture unit to texture unit 0.
+	    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+	    // Bind the texture to this unit.
+	    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle);
+	    // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+	    GLES20.glUniform1i(mTextureUniformHandle, 0);
+	    
+	    /**
+         * 光源实现的效果为在，以Z=-5为轴，半径为2个单位旋转
+         * 实现步骤（旋转平移操作的代码步骤与矩阵相乘的计算顺序相反，矩阵相乘左乘）：
+         * 1. 先将光源向z轴的正方向平移2个单位
+         * 2. 再让光源绕Y轴旋转
+         * 3. 再将光源向Z轴的负方向平移5个单位（相当于把旋转轴平移了5个单位）
+         */
+        // Calculate position of the light. Rotate and then push into the distance.
+        Matrix.setIdentityM(mLightModelMatrix, 0);	// 初始化光照模型矩阵为单位矩阵
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, -5.0f);   // 向z轴的负方向平移5个单位   
+        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转,旋转半径为2个单位
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 4.0f);	// 再向z轴正方向平移2个单位
+        
+        /**
+         * 模型自身的坐标系==》世界坐标系==》二维屏幕的3d坐标系
+         */
+        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);//模型坐标转为世界坐标
+        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);  	// 世界坐标转为屏幕3D坐标
+        
+        /**
+		 * 绕自身旋转
+		 */
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 1.0f, -4.0f);
+        
+//        // 直接旋转模型矩阵
+//        Matrix.rotateM(mModelMatrix, 0, mDeltaX, 0.0f, 1.0f, 0.0f);	// 绕X轴旋转
+//		Matrix.rotateM(mModelMatrix, 0, mDeltaY, 1.0f, 0.0f, 0.0f);	// 绕Y轴旋转 
+		
+        // 设置一个矩阵，用于保存当前的旋转信息
+        Matrix.setIdentityM(mCurrentRotation, 0);
+        
+        Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);	// 绕X轴旋转
+		Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);	// 绕Y轴旋转 
+		mDeltaX = 0.0f;
+		mDeltaY = 0.0f;
+		
+		// 保留旋转信息，下次旋转在此基础之上操作
+    	// Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
+    	Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+    	System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
+		
+    	// 获取模型旋转后的矩阵
+    	// Rotate the cube taking the overall rotation into account.     	
+    	Matrix.multiplyMM(mTemporaryMatrix, 0, mModelMatrix, 0, mAccumulatedRotation, 0);
+    	System.arraycopy(mTemporaryMatrix, 0, mModelMatrix, 0, 16);
+    	// 绘制旋转后的立方体
+    	cube360.drawCube(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,mTextureCoordinateHandle);
+        
+        // 绘制绕自身Y轴旋转的地面，立方体的上面
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, -2.0f, -5.0f);
+        Matrix.scaleM(mModelMatrix, 0, 25.0f, 1.0f, 25.0f);
+        Matrix.rotateM(mModelMatrix, 0, slowAngleInDegrees, 0.0f, 1.0f, 0.0f);
+        
+        // 激活材质，绑定材质贴图数据
+        // Set the active texture unit to texture unit 0.
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        // Bind the texture to this unit.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mGrassDataHandle);
+        // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+        GLES20.glUniform1i(mTextureUniformHandle, 0);
+
+        
+        cube360.drawPlane(mPositionHandle, mColorHandle, mNormalHandle,
+				mViewMatrix, mModelMatrix, mMVMatrixHandle, mProjectionMatrix,
+				mMVPMatrixHandle, mLightPosHandle, mLightPosInEyeSpace,
+				mGrassDataHandle);
+
+		// 绘制点表示光源
+        // Draw a point to indicate the light.
+        GLES20.glUseProgram(mPointProgramHandle);        
+		point.drawLight(cube360.getmMVPMatrix(),mLightModelMatrix, mProjectionMatrix,
 				mPointProgramHandle, mLightPosInModelSpace, mViewMatrix);
 	    
 	}
