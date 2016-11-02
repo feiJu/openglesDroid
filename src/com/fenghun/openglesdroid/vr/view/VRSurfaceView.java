@@ -72,6 +72,7 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 					
 					vrRender.setDeltaX(mDeltaX);
 					vrRender.setDeltaY(mDeltaY);
+					vrRender.getSphereView().setCamera(mDeltaY);
 					//System.out.println("------mDeltaX=="+mDeltaX+",mDeltaY="+mDeltaY);
 				}
 			}	

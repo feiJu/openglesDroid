@@ -284,7 +284,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    // We are looking toward the distance
 	    final float lookX = 0.0f;
 	    final float lookY = 0.0f;
-	    final float lookZ = -5.0f;
+	    final float lookZ = -3.0f;
 	 
 	    // Set our up vector. This is where our head would be pointing were we holding the camera.
 	    final float upX = 0.0f;
@@ -336,7 +336,7 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    final float bottom = -1.0f;
 	    final float top = 1.0f;
 	    final float near = 1.0f;
-	    final float far = 10.0f;
+	    final float far = 100.0f;
 	 
 	    Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
 	}
@@ -771,7 +771,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 	    //mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.stone_wall_public_domain);
 	    mTextureDataHandle = GLES20Utils.loadTexture(context, R.drawable.sea360);
 	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
-	    mGrassDataHandle = GLES20Utils.loadTexture(context, R.drawable.noisy_grass_public_domain);
+	    //mGrassDataHandle = GLES20Utils.loadTexture(context, R.drawable.noisy_grass_public_domain);
+	    mGrassDataHandle = GLES20Utils.loadTexture(context, R.drawable.ic_launcher);
 	    GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
 	    
 	    // 初始化光源点，以便于观察
@@ -857,8 +858,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
 		 * 绕自身旋转
 		 */
         Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 0.0f, 1.0f, -4.0f);
-        
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5.0f);
+        //Matrix.scaleM(mModelMatrix, 0, 4.0f,4.0f, 4.0f);
 //        // 直接旋转模型矩阵
 //        Matrix.rotateM(mModelMatrix, 0, mDeltaX, 0.0f, 1.0f, 0.0f);	// 绕X轴旋转
 //		Matrix.rotateM(mModelMatrix, 0, mDeltaY, 1.0f, 0.0f, 0.0f);	// 绕Y轴旋转 
@@ -887,8 +888,8 @@ public class GLES20SurfaceView extends GLSurfaceView implements Renderer {
         
         // 绘制绕自身Y轴旋转的地面，立方体的上面
         Matrix.setIdentityM(mModelMatrix, 0);
-        Matrix.translateM(mModelMatrix, 0, 0.0f, -2.0f, -5.0f);
-        Matrix.scaleM(mModelMatrix, 0, 25.0f, 1.0f, 25.0f);
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5.0f);
+        Matrix.scaleM(mModelMatrix, 0, 4.0f, 4.0f, 4.0f);
         Matrix.rotateM(mModelMatrix, 0, slowAngleInDegrees, 0.0f, 1.0f, 0.0f);
         
         // 激活材质，绑定材质贴图数据

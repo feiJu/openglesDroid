@@ -580,6 +580,9 @@ public class Cube360 {
 			float[] mLightPosInEyeSpace,int mTextureCoordinateHandle) {
 		// TODO Auto-generated method stub
 		
+		GLES20.glFrontFace(GLES20.GL_CCW);	// 逆时针
+		
+		
 		// Pass in the position information
 		mCubePositions.position(0);
 		GLES20.glVertexAttribPointer(mPositionHandle, mPositionDataSize,
@@ -648,6 +651,8 @@ public class Cube360 {
 			int mMVPMatrixHandle, int mLightPosHandle,
 			float[] mLightPosInEyeSpace, int mGrassDataHandle) {
 		// TODO Auto-generated method stub
+		
+		GLES20.glFrontFace(GLES20.GL_CW);	// 顺时针
 		
 		// 传入材质坐标信息
 		// Pass in the texture coordinate information

@@ -203,11 +203,11 @@ public class GLES10SurfaceView extends GLSurfaceView implements Renderer {
 		// drawTestRects(gl);
 
 		// 绘制旋转的立方体
-		// if(cube != null) drawCube(gl);
+		 if(cube != null) drawCube(gl);
 
 		// 绘制包含材质的简单平面
-		 if (sp != null)
-		 sp.draw(gl);
+//		 if (sp != null)
+//		 sp.draw(gl);
 
 	}
 

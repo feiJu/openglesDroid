@@ -22,7 +22,7 @@ public class Sphere extends Mesh {
 
 	private final float UNIT_SIZE = 1.0f; // 单位尺寸
 
-	private float radius = 0.8f; // 球体半径
+	private float radius = 1.0f; // 球体半径
 
 	private float[] verticesCoordinates; // 顶点坐标
 
@@ -47,7 +47,7 @@ public class Sphere extends Mesh {
 	private final float[] mAccumulatedRotation = new float[16];
 	/** A temporary matrix. */
 	private float[] mTemporaryMatrix = new float[16];
-	private boolean isTouchScreenRotate = false;
+	private boolean isTouchScreenRotate = true;
 
 	public Sphere(Context context, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
@@ -271,6 +271,8 @@ public class Sphere extends Mesh {
 	public void draw(float deltaX, float deltaY) {
 		// TODO Auto-generated method stub
 		
+		//GLES20.glFrontFace(GLES20.GL_CCW);	// 逆时针，观察球外贴图
+		//GLES20.glFrontFace(GLES20.GL_CW);	// 逆时针，观察球内贴图
 		
 		// 将半径尺寸传入shader程序
 		//GLES20.glUniform1f(radiusHandle, radius * UNIT_SIZE);
@@ -278,12 +280,12 @@ public class Sphere extends Mesh {
 		// Draw the triangle facing straight on.
 		Matrix.setIdentityM(mModelMatrix, 0);
 		
-		if(isTouchScreenRotate){
-			Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转
-			Matrix.rotateM(mModelMatrix, 0, deltaY, 1.0f, 0.0f, 0.0f);	// 绕X轴旋转
-		}else{
-			Matrix.multiplyMM(mModelMatrix, 0, mModelMatrix, 0, mRotationMatrix, 0);
-		}
+//		if(isTouchScreenRotate){
+//			Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转
+//			Matrix.rotateM(mModelMatrix, 0, deltaY, 1.0f, 0.0f, 0.0f);	// 绕X轴旋转
+//		}else{
+//			Matrix.multiplyMM(mModelMatrix, 0, mModelMatrix, 0, mRotationMatrix, 0);
+//		}
 		render(mModelMatrix);
 	}
 
@@ -297,5 +299,10 @@ public class Sphere extends Mesh {
 
 	public void setTouchScreenRotate(boolean isTouchScreenRotate) {
 		this.isTouchScreenRotate = isTouchScreenRotate;
+	}
+	
+	public void setCamera(float test){
+		System.out.println("------------ test=="+test);
+		setLookAtM(0, 0, test, 0f, 0f, 0f, 0f, 1.0f, 0.0f);	// 设置观察矩阵即camera
 	}
 }
