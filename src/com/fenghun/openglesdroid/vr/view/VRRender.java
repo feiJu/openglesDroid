@@ -133,4 +133,12 @@ public class VRRender implements Renderer {
 	public void setDeltaY(float deltaY) {
 		this.deltaY = deltaY;
 	}
+
+	public Sphere getSphereView() {
+		return sphereView;
+	}
+
+	public void setSphereView(Sphere sphereView) {
+		this.sphereView = sphereView;
+	}
 }

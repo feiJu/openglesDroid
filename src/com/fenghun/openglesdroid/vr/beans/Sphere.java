@@ -41,6 +41,13 @@ public class Sphere extends Mesh {
 	private float[] mModelMatrix = new float[16];
 	
 	//private int radiusHandle = -1;
+	
+	private final float[] mRotationMatrix = new float[16];	// 旋转矩阵
+	/** Store the accumulated rotation. */
+	private final float[] mAccumulatedRotation = new float[16];
+	/** A temporary matrix. */
+	private float[] mTemporaryMatrix = new float[16];
+	private boolean isTouchScreenRotate = false;
 
 	public Sphere(Context context, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
@@ -65,6 +72,7 @@ public class Sphere extends Mesh {
 		
 		//setLookAtM(0.0f,0.0f,1.0f,0.0f,0.0f,-5.0f,0.0f,1.0f,0.0f);	// 设置观察矩阵即camera
 		setLookAtM(0, 0, 30, 0f, 0f, 0f, 0f, 1.0f, 0.0f);	// 设置观察矩阵即camera
+		Matrix.setIdentityM(mRotationMatrix, 0);	// 初始化为单位矩阵
 	}
 
 	// 初始化顶点坐标数据的方法（逆时针）
@@ -239,19 +247,8 @@ public class Sphere extends Mesh {
 			
 			for(int j=0; j <col; j++){	// 对每一列循环
 				verTextArr.add(j * col_unit);
-//				if(j%4 ==3){
-//					verTextArr.add((i+1) * row_unit);
-//				}else{
-					verTextArr.add(i * row_unit);
-//				}
-				
+				verTextArr.add(i * row_unit);
 			}
-			
-//			for(int j=0; j < col; j++){	// 对每一列循环
-//				verTextArr.add(j * col_unit);
-//				verTextArr.add((i-1) * row_unit);
-//			}
-			
 		}
 		System.out.println("----- verTextArr  size=="+verTextArr.size());
 		
@@ -280,8 +277,25 @@ public class Sphere extends Mesh {
 		
 		// Draw the triangle facing straight on.
 		Matrix.setIdentityM(mModelMatrix, 0);
-		Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转
-		Matrix.rotateM(mModelMatrix, 0, deltaY, 1.0f, 0.0f, 0.0f);	// 绕X轴旋转
+		
+		if(isTouchScreenRotate){
+			Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f);	// 绕Y轴旋转
+			Matrix.rotateM(mModelMatrix, 0, deltaY, 1.0f, 0.0f, 0.0f);	// 绕X轴旋转
+		}else{
+			Matrix.multiplyMM(mModelMatrix, 0, mModelMatrix, 0, mRotationMatrix, 0);
+		}
 		render(mModelMatrix);
+	}
+
+	public float[] getmRotationMatrix() {
+		return mRotationMatrix;
+	}
+
+	public boolean isTouchScreenRotate() {
+		return isTouchScreenRotate;
+	}
+
+	public void setTouchScreenRotate(boolean isTouchScreenRotate) {
+		this.isTouchScreenRotate = isTouchScreenRotate;
 	}
 }

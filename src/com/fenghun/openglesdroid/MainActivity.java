@@ -4,6 +4,7 @@ import com.fenghun.openglesdroid.jni.MyOpenglES;
 import com.fenghun.openglesdroid.jni.view.GLES10SurfaceView;
 import com.fenghun.openglesdroid.jni.view.GLES20SurfaceView;
 import com.fenghun.openglesdroid.jni.view.MySurfaceView;
+import com.fenghun.openglesdroid.listener.MySensorEventListener;
 import com.fenghun.openglesdroid.vr.view.VRRender;
 import com.fenghun.openglesdroid.vr.view.VRSurfaceView;
 
@@ -14,6 +15,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ConfigurationInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.opengl.GLES20;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -42,6 +45,12 @@ public class MainActivity extends Activity {
 	private int screenWidth;
 	private int screenHeight;
 	
+	private SensorManager mSensorManager;
+	
+	private Sensor mRotationVectorSensor;
+	
+	private MySensorEventListener mySensorEventListener;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -50,6 +59,8 @@ public class MainActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);// 去掉信息栏
 
+		dealSensorEvents();	// 处理传感器模块
+		
 		setContentView(R.layout.activity_main);
 		FrameLayout surfaceViewFL = (FrameLayout) findViewById(R.id.surfaceViewFL);
 
@@ -82,10 +93,24 @@ public class MainActivity extends Activity {
 		MyOpenglES.test();
 	}
 
+	
+	private void dealSensorEvents() {
+		// TODO Auto-generated method stub
+		// find the rotation-vector sensor
+		// Get an instance of the SensorManager
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mRotationVectorSensor = mSensorManager.getDefaultSensor(
+                Sensor.TYPE_ROTATION_VECTOR);
+        mySensorEventListener = new MySensorEventListener(this); 
+	}
+
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+		// enable our sensor when the activity is resumed, ask for
+        // 10 ms updates.
+        mSensorManager.registerListener(mySensorEventListener, mRotationVectorSensor, 10000);
 		if(surfaceViewVR != null) surfaceViewVR.onResume();
 	}
 	
@@ -94,6 +119,8 @@ public class MainActivity extends Activity {
 		// TODO Auto-generated method stub
 		super.onPause();
 		if(surfaceViewVR !=null) surfaceViewVR.onPause();
+		 // make sure to turn our sensor off when the activity is paused
+        mSensorManager.unregisterListener(mySensorEventListener);
 	}
 	
 	
@@ -344,5 +371,15 @@ public class MainActivity extends Activity {
 
 	public void setScreenHeight(int screenHeight) {
 		this.screenHeight = screenHeight;
+	}
+
+
+	public VRSurfaceView getSurfaceViewVR() {
+		return surfaceViewVR;
+	}
+
+
+	public void setSurfaceViewVR(VRSurfaceView surfaceViewVR) {
+		this.surfaceViewVR = surfaceViewVR;
 	}
 }

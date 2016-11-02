@@ -86,5 +86,13 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 			return super.onTouchEvent(event);
 		}		
 	}
+
+	public VRRender getVrRender() {
+		return vrRender;
+	}
+
+	public void setVrRender(VRRender vrRender) {
+		this.vrRender = vrRender;
+	}
 	
 }
