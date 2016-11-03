@@ -4,7 +4,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.fenghun.openglesdroid.MainActivity;
-import com.fenghun.openglesdroid.jni.bean20.Constant;
 import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
 import com.fenghun.openglesdroid.vr.beans.Rectangle;
 import com.fenghun.openglesdroid.vr.beans.Sphere;
@@ -56,8 +55,10 @@ public class VRRender implements Renderer {
 		GLES20.glClearColor(0.0f, 0.5f, 0.5f, 1.0f);
 
 		// GLES20.glFrontFace(GLES20.GL_CCW);
-		// Use culling to remove back faces.
+		// Use culling(剔除) to remove back faces.
 		GLES20.glEnable(GLES20.GL_CULL_FACE);
+//		GLES20.glCullFace(GLES20.GL_BACK); 
+//		GLES20.glFrontFace(GLES20.GL_CW);
 
 		// Enable depth testing
 		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
@@ -74,7 +75,7 @@ public class VRRender implements Renderer {
 		Log.d(TAG, "onSurfaceChanged(GL10 glUnused, int width, int height) is called!");
 		//rectView.setProjectionMatrix(width, height);
 		float ratio = (float) width / height;
-		sphereView.setProjectionMatrix(width,height,-ratio, ratio, -1, 1, 20, 100);
+		sphereView.setProjectionMatrix(width,height,-ratio, ratio, -1, 1, 1.0f, 100);
 	}
 
 	@Override

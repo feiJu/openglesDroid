@@ -2,6 +2,7 @@ package com.fenghun.openglesdroid.vr.view;
 
 import com.fenghun.openglesdroid.MainActivity;
 import com.fenghun.openglesdroid.jni.bean20.ErrorHandler;
+import com.fenghun.openglesdroid.vr.beans.Sphere;
 
 import android.opengl.GLSurfaceView;
 import android.util.Log;
@@ -70,9 +71,11 @@ public class VRSurfaceView extends GLSurfaceView implements ErrorHandler{
 					mDeltaX += deltaX;
 					mDeltaY += deltaY;
 					
+					
 					vrRender.setDeltaX(mDeltaX);
 					vrRender.setDeltaY(mDeltaY);
-					vrRender.getSphereView().setCamera(mDeltaY);
+//					Sphere sv = vrRender.getSphereView();
+//					if(sv!= null) sv.setCamera(mDeltaY);
 					//System.out.println("------mDeltaX=="+mDeltaX+",mDeltaY="+mDeltaY);
 				}
 			}	

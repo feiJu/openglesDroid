@@ -151,10 +151,10 @@ public class Mesh {
 		final float ratio = (float) width / height;
 		final float left = -ratio;
 		final float right = ratio;
-		final float bottom = -1.0f;
-		final float top = 1.0f;
+		final float bottom = -20.0f;
+		final float top = 20.0f;
 		final float near = 1.0f;
-		final float far = 100.0f;
+		final float far = 1000.0f;
 		Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near,
 				far);
 	}
