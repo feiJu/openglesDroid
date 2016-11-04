@@ -93,6 +93,22 @@ public class MainActivity extends Activity {
 		MyOpenglES.test();
 	}
 
+	/**
+	 * 单双眼模式切换
+	 * 
+	 * @param view
+	 */
+	public void isVR(View view){
+		boolean isVR= surfaceViewVR.getVrRender().isVR();
+		if(isVR){	// 当前是双眼模式
+			((Button)view).setText("单");
+			surfaceViewVR.getVrRender().setVR(false);
+		}else{
+			((Button)view).setText("双");
+			surfaceViewVR.getVrRender().setVR(true);
+		}
+	}
+	
 	
 	private void dealSensorEvents() {
 		// TODO Auto-generated method stub

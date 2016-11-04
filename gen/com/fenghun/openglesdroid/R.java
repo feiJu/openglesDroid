@@ -36,13 +36,14 @@ public final class R {
         public static final int world=0x7f020007;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a0007;
-        public static final int button_decrease_num_cubes=0x7f0a0003;
-        public static final int button_increase_num_cubes=0x7f0a0004;
-        public static final int button_set_mag_filter=0x7f0a0002;
-        public static final int button_set_min_filter=0x7f0a0001;
-        public static final int button_switch_VBOs=0x7f0a0005;
-        public static final int button_switch_stride=0x7f0a0006;
+        public static final int action_settings=0x7f0a0008;
+        public static final int button_decrease_num_cubes=0x7f0a0004;
+        public static final int button_increase_num_cubes=0x7f0a0005;
+        public static final int button_set_mag_filter=0x7f0a0003;
+        public static final int button_set_min_filter=0x7f0a0002;
+        public static final int button_switch_VBOs=0x7f0a0006;
+        public static final int button_switch_stride=0x7f0a0007;
+        public static final int isVRBtn=0x7f0a0001;
         public static final int surfaceViewFL=0x7f0a0000;
     }
     public static final class layout {

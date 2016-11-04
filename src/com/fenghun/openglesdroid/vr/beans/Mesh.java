@@ -102,7 +102,7 @@ public class Mesh {
 	private int mTextureUniformHandle = -1;
 
 	private int mOneFrameDataHandle = -1;
-
+	
 	/**
 	 * 设置摄像头View
 	 */
@@ -142,8 +142,6 @@ public class Mesh {
 	 * @param height
 	 */
 	public void setProjectionMatrix(int width, int height) {
-
-		GLES20.glViewport(0, 0, width, height);
 		// Create a new perspective projection matrix. The height will stay the
 		// same
 		// while the width will vary as per aspect ratio.
@@ -167,8 +165,8 @@ public class Mesh {
 	 */
 	public void setProjectionMatrix(int width, int height,float left,float right,
 			float bottom,float top,float near,float far) {
-
 		GLES20.glViewport(0, 0, width, height);
+		
 		// Create a new perspective projection matrix. The height will stay the
 		// same
 		// while the width will vary as per aspect ratio.
@@ -325,8 +323,7 @@ public class Mesh {
 		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,
 				indicesCoordinatesIndex);// 绑定绘制顺序数据缓存
 		GLES20.glDrawElements(GLES20.GL_TRIANGLES, numOfIndices,
-				GLES20.GL_UNSIGNED_SHORT, 0);
-
+					GLES20.GL_UNSIGNED_SHORT, 0);
 //		System.out.println("--- mPositionHandle==" + mPositionHandle
 //				+ ",mColorAttributeHandle="  + mColorHandle 
 //				+ ",mTextureCoordinateHandle=" + mTextureCoordinateHandle);

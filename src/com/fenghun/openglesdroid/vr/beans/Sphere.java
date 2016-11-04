@@ -49,6 +49,8 @@ public class Sphere extends Mesh {
 	private float[] mTemporaryMatrix = new float[16];
 	private boolean isTouchScreenRotate = true;
 
+	private int width,height;
+	
 	public Sphere(Context context, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
 		// initVertexDataNewCCM(); // 初始化顶点和顶点顺序，逆时针,观察球外贴图
@@ -453,6 +455,16 @@ public class Sphere extends Mesh {
 		System.out.println("texture ver num = " + verTextureCoordinate.length);
 	}
 
+	@Override
+	public void setProjectionMatrix(int width, int height, float left,
+			float right, float bottom, float top, float near, float far) {
+		// TODO Auto-generated method stub
+		this.width= width;
+		this.height = height;
+		super.setProjectionMatrix(width, height, left, right, bottom, top, near, far);
+	}
+	
+	
 	/**
 	 * 绘制球体
 	 * 
@@ -466,16 +478,25 @@ public class Sphere extends Mesh {
 
 		// Draw the triangle facing straight on.
 		Matrix.setIdentityM(mModelMatrix, 0);
-		//Matrix.rotateM(mModelMatrix, 0, -90, 1.0f, 0.0f, 0.0f); // 绕X轴旋转
+		
 		if (isTouchScreenRotate) {
 			Matrix.rotateM(mModelMatrix, 0, deltaX, 0.0f, 1.0f, 0.0f); // 绕Y轴旋转
 			//Matrix.rotateM(mModelMatrix, 0, deltaY, 0.0f, 0.0f, 1.0f); // 球外，绕X轴旋转
 			Matrix.rotateM(mModelMatrix, 0, deltaY, 0.0f, 0.0f, 1.0f); // 球内，绕Z轴旋转
 		} else {
+			Matrix.rotateM(mModelMatrix, 0, -90, 1.0f, 0.0f, 0.0f); // 绕X轴旋转
 			Matrix.multiplyMM(mModelMatrix, 0, mModelMatrix, 0,
 					mRotationMatrix, 0);
 		}
 		render(mModelMatrix);
+//		if(isVR){
+//			GLES20.glViewport(width/2, 0, width, height);
+//			render(mModelMatrix);
+//			GLES20.glViewport(0, 0, width/2, height);
+//			render(mModelMatrix);
+//		}else{
+//			render(mModelMatrix);
+//		}
 	}
 
 	public float[] getmRotationMatrix() {

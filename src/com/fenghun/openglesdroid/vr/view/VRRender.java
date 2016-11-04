@@ -38,6 +38,10 @@ public class VRRender implements Renderer {
 	private float deltaX;
 	private float deltaY;
 	
+	private boolean isVR = true;
+	
+	private int width,height;
+	
 	//
 	public VRRender(MainActivity mainActivity, ErrorHandler errorHandler) {
 		// TODO Auto-generated constructor stub
@@ -74,6 +78,8 @@ public class VRRender implements Renderer {
 		// TODO Auto-generated method stub
 		Log.d(TAG, "onSurfaceChanged(GL10 glUnused, int width, int height) is called!");
 		//rectView.setProjectionMatrix(width, height);
+		this.width = width;
+		this.height = height;
 		float ratio = (float) width / height;
 		sphereView.setProjectionMatrix(width,height,-ratio, ratio, -1, 1, 1.0f, 100);
 	}
@@ -116,7 +122,15 @@ public class VRRender implements Renderer {
 	 */
 	private void drawSphereView() {
 		// TODO Auto-generated method stub
-		sphereView.draw(deltaX,deltaY);
+		if(isVR){
+			GLES20.glViewport(width/2, 0, width, height);
+			sphereView.draw(deltaX,deltaY);
+//			GLES20.glViewport(0, 0, width/2, height);
+//			sphereView.draw(deltaX,deltaY);
+		}else{
+			GLES20.glViewport(0, 0, width, height);
+			sphereView.draw(deltaX,deltaY);
+		}
 	}
 
 	public float getDeltaX() {
@@ -141,5 +155,13 @@ public class VRRender implements Renderer {
 
 	public void setSphereView(Sphere sphereView) {
 		this.sphereView = sphereView;
+	}
+
+	public boolean isVR() {
+		return isVR;
+	}
+
+	public void setVR(boolean isVR) {
+		this.isVR = isVR;
 	}
 }
